@@ -32,6 +32,8 @@ class SubtitleFragment(QFrame):
         self._layout.addWidget(self._content_label)
         self._layout.addStretch()
 
+        self._ignored = False
+
     #### Properties
 
     def set_selected(self, selected):
@@ -40,6 +42,23 @@ class SubtitleFragment(QFrame):
             return
         self._selected = selected
         self.setProperty("selected", selected)
+        self.style().unpolish(self)
+        self.style().polish(self)
+
+    @property
+    def ignored(self):
+        return self._ignored
+
+    @ignored.setter
+    def ignored(self, value):
+        if self._ignored == value:
+            return
+        self._ignored = value
+        if value:
+            self._content_label.setStyleSheet("text-decoration: line-through;")
+        else:
+            self._content_label.setStyleSheet("")
+        self.setProperty("ignored", value)
         self.style().unpolish(self)
         self.style().polish(self)
 

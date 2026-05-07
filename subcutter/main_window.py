@@ -53,6 +53,12 @@ class MainWindow(QMainWindow):
             MainWindow[show_as_inline=true] SubtitleFragment[selected=true] {
               background-color: #add8e6 !important;
             }
+            SubtitleFragment[ignored=true] {
+              color: #999999;
+            }
+            SubtitleFragment[ignored=true] QLabel {
+              color: #999999;
+            }
         """
         )
 
@@ -101,8 +107,8 @@ class MainWindow(QMainWindow):
         self.ignore_fragment_action = QAction(
             QIcon.fromTheme("format-text-strikethrough"), "Ignore Fragment", self
         )
-        self.ignore_fragment_action.setCheckable(True)
         self.ignore_fragment_action.setToolTip("Mark the selected fragment as ignored")
+        self.ignore_fragment_action.triggered.connect(self._toggle_ignore_selected)
 
         self.inline_action = QAction(
             QIcon.fromTheme("format-justify-fill"), "Inline Subtitles", self
@@ -169,6 +175,15 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(main_splitter)
 
     #### Actions
+
+    def _toggle_ignore_selected(self):
+        """Toggle the ignored state of the currently selected fragment(s)."""
+        selected = [f for f in self.subtitle_display._fragments if f._selected]
+        if not selected:
+            return
+        state = not selected[0].ignored
+        for frag in selected:
+            frag.ignored = state
 
     def _open_file(self):
         """Open a file dialog for video or subtitle files."""
