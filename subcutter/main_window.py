@@ -55,10 +55,13 @@ class MainWindow(QMainWindow):
     def _build_ui(self):
         # ── Left panel ────────────────────────────────────────────
         self.subtitle_display = SubtitleDisplay()
-
+        
         # ── Right panel ───────────────────────────────────────────
         self.video_player = VideoPlayer()
         self.input_panel = InputPanel()
+
+        # Connect file loading to trigger subtitle parsing
+        self.input_panel.subtitle_input.textChanged.connect(self._load_subtitles)
 
         right_splitter = QSplitter(Qt.Vertical)
         right_splitter.addWidget(self.video_player)
@@ -75,3 +78,7 @@ class MainWindow(QMainWindow):
         main_splitter.setStretchFactor(1, 1)
 
         self.setCentralWidget(main_splitter)
+
+    def _load_subtitles(self, path):
+        if path and path.endswith(".srt"):
+            self.subtitle_display.load_subtitles(path)
