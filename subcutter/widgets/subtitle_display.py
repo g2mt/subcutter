@@ -41,10 +41,6 @@ class SubtitleDisplay(QScrollArea):
     #### Fragments
 
     def _refresh_fragments(self):
-        from subcutter.main_window import MainWindow
-        self._on_show_as_inline_changed(MainWindow.singleton.show_as_inline())
-
-    def _on_show_as_inline_changed(self, show_as_inline=False):
         """Create fragment widgets from current subtitles."""
         for frag in self._fragments:
             try:
@@ -56,6 +52,9 @@ class SubtitleDisplay(QScrollArea):
         self._fragments.clear()
         self._anchor_index = None
 
+        from subcutter.main_window import MainWindow
+        show_as_inline = MainWindow.singleton.show_as_inline()
+
         old_layout = self._layout
         if show_as_inline:
             self._layout = FlowLayout()
@@ -65,9 +64,31 @@ class SubtitleDisplay(QScrollArea):
             self._layout.setContentsMargins(0, 0, 0, 0)
             self._layout.setSpacing(0)
         for sub in self._current_subtitles:
-            frag = SubtitleFragment(sub, show_as_inline=show_as_inline)
+            frag = SubtitleFragment(sub)
+            frag.show_as_inline = show_as_inline
             frag.clicked.connect(self._on_fragment_clicked)
             self._fragments.append(frag)
+            self._layout.addWidget(frag)
+        if not show_as_inline:
+            self._layout.addStretch()
+
+        if old_layout is not None:
+            QWidget().setLayout(old_layout)
+        self._container.setLayout(self._layout)
+
+    def _on_show_as_inline_changed(self, show_as_inline=False):
+        """Move fragments to a new layout without recreating them."""
+        old_layout = self._layout
+        if show_as_inline:
+            self._layout = FlowLayout()
+            self._layout.setContentsMargins(4, 4, 4, 4)
+        else:
+            self._layout = QVBoxLayout()
+            self._layout.setContentsMargins(0, 0, 0, 0)
+            self._layout.setSpacing(0)
+
+        for frag in self._fragments:
+            frag.show_as_inline = show_as_inline
             self._layout.addWidget(frag)
         if not show_as_inline:
             self._layout.addStretch()

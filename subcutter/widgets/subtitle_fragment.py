@@ -8,31 +8,30 @@ class SubtitleFragment(QFrame):
     """A single selectable subtitle entry."""
     clicked = Signal(object)
 
-    def __init__(self, subtitle, show_as_inline=False, parent=None):
+    def __init__(self, subtitle, parent=None):
         super().__init__(parent)
+
         self.subtitle = subtitle
-        self._show_as_inline = show_as_inline
         self._selected = False
+        self._show_as_inline = False
+        self._ignored = False
 
         self.setFrameShape(QFrame.StyledPanel)
         self.setCursor(Qt.PointingHandCursor)
 
         self._layout = QHBoxLayout(self)
+        self._layout.setContentsMargins(5, 5, 5, 5)
 
-        if show_as_inline:
-            self._layout.setContentsMargins(4, 2, 4, 2)
-        else:
-            self._layout.setContentsMargins(5, 5, 5, 5)
-            self._info_label = QLabel(
-                f"{subtitle.index} | {subtitle.start} --> {subtitle.end}"
-            )
-            self._layout.addWidget(self._info_label)
+        self._info_label = QLabel(
+            f"{subtitle.index} | {subtitle.start} --> {subtitle.end}"
+        )
+        self._layout.addWidget(self._info_label)
 
         self._content_label = QLabel(subtitle.content.replace('\n', ' '))
         self._layout.addWidget(self._content_label)
         self._layout.addStretch()
 
-        self._ignored = False
+        self._update_show_as_inline()
 
     #### Properties
 
@@ -49,6 +48,25 @@ class SubtitleFragment(QFrame):
         self.setProperty("selected", selected)
         self.style().unpolish(self)
         self.style().polish(self)
+
+    @property
+    def show_as_inline(self):
+        return self._show_as_inline
+
+    @show_as_inline.setter
+    def show_as_inline(self, show_as_inline):
+        if self._show_as_inline == show_as_inline:
+            return
+        self._show_as_inline = show_as_inline
+        self._update_show_as_inline()
+
+    def _update_show_as_inline(self):
+        if self._show_as_inline:
+            self._layout.setContentsMargins(4, 2, 4, 2)
+            self._info_label.hide()
+        else:
+            self._layout.setContentsMargins(5, 5, 5, 5)
+            self._info_label.show()
 
     @property
     def ignored(self):

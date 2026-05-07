@@ -86,10 +86,12 @@ class MainWindow(QMainWindow):
 
     #### Properties
 
+    @property
     def show_as_inline(self):
         return self._show_as_inline
 
-    def set_show_as_inline(self, value):
+    @show_as_inline.setter
+    def show_as_inline(self, value):
         if self._show_as_inline != value:
             self._show_as_inline = value
             self.setProperty("show_as_inline", value)
@@ -169,7 +171,9 @@ class MainWindow(QMainWindow):
         )
         self.inline_action.setCheckable(True)
         self.inline_action.setToolTip("Display subtitle fragments inline with wrapping")
-        self.inline_action.toggled.connect(self.set_show_as_inline)
+        def on_inline_action_toggled(toggled):
+            self.show_as_inline = toggled
+        self.inline_action.toggled.connect(on_inline_action_toggled)
 
         self.render_action = QAction(
             QIcon.fromTheme("media-record"), "Render", self
