@@ -23,4 +23,10 @@ class InputPanel(QWidget):
         self.subtitle_input.setPlaceholderText("Path to .srt file…")
         layout.addWidget(self.subtitle_input)
 
+        # Output file
+        layout.addWidget(QLabel("Output file:"))
+        self.output_input = QLineEdit()
+        self.output_input.setPlaceholderText("Path to output video…")
+        layout.addWidget(self.output_input)
+
         layout.addStretch()

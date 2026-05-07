@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QMainWindow,
     QMenu,
+    QMessageBox,
     QSplitter,
     QToolBar,
 )
@@ -115,6 +116,12 @@ class MainWindow(QMainWindow):
         self.inline_action.setToolTip("Display subtitle fragments inline with wrapping")
         self.inline_action.toggled.connect(self.set_show_as_inline)
 
+        self.render_action = QAction(
+            QIcon.fromTheme("media-record"), "Render", self
+        )
+        self.render_action.setToolTip("Render the concatenated video")
+        self.render_action.triggered.connect(self._render)
+
     def _build_menubar(self):
         menubar = self.menuBar()
 
@@ -137,13 +144,18 @@ class MainWindow(QMainWindow):
 
         toolbar.addAction(self.open_action)
         toolbar.addAction(self.save_action)
+
+        toolbar.addSeparator()
+
         toolbar.addAction(self.undo_action)
         toolbar.addAction(self.redo_action)
+        toolbar.addAction(self.render_action)
 
         toolbar.addSeparator()
 
         toolbar.addAction(self.ignore_fragment_action)
         toolbar.addAction(self.inline_action)
+
 
     def _build_ui(self):
         # ── Left panel ────────────────────────────────────────────
@@ -194,6 +206,17 @@ class MainWindow(QMainWindow):
         for frag in selected:
             frag.ignored = state
         self.edited.emit()
+
+    def _render(self):
+        """Render the concatenated video."""
+        output_path = self.input_panel.output_input.text()
+        if not output_path:
+            QMessageBox.warning(self, "Render", "No output file specified.")
+            return
+        try:
+            self.encoder.render(output_path)
+        except RuntimeError as e:
+            QMessageBox.critical(self, "Render Error", str(e))
 
     def _open_file(self):
         """Open a file dialog for video or subtitle files."""
