@@ -76,6 +76,30 @@ class SubtitleDisplay(QScrollArea):
             QWidget().setLayout(old_layout)
         self._container.setLayout(self._layout)
 
+    def _on_fragment_clicked(self, subtitle):
+        """Handle fragment click, supporting shift-click range selection."""
+        idx = next(
+            (i for i, s in enumerate(self._current_subtitles) if s is subtitle),
+            None,
+        )
+        if idx is None:
+            return
+
+        modifiers = QApplication.keyboardModifiers()
+
+        if modifiers & Qt.ShiftModifier and self._anchor_index is not None:
+            start = min(self._anchor_index, idx)
+            end = max(self._anchor_index, idx)
+            for i, frag in enumerate(self._fragments):
+                frag.selected = start <= i <= end
+        else:
+            for frag in self._fragments:
+                frag.selected = False
+            self._fragments[idx].selected = True
+            self._anchor_index = idx
+
+    #### Saving/loading
+
     def save(self):
         """Serialize subtitle display state (subtitles + ignored states) to a JSON string."""
         return json.dumps({
@@ -111,24 +135,3 @@ class SubtitleDisplay(QScrollArea):
             if i < len(self._fragments) and s.get("ignored", False):
                 self._fragments[i].ignored = True
 
-    def _on_fragment_clicked(self, subtitle):
-        """Handle fragment click, supporting shift-click range selection."""
-        idx = next(
-            (i for i, s in enumerate(self._current_subtitles) if s is subtitle),
-            None,
-        )
-        if idx is None:
-            return
-
-        modifiers = QApplication.keyboardModifiers()
-
-        if modifiers & Qt.ShiftModifier and self._anchor_index is not None:
-            start = min(self._anchor_index, idx)
-            end = max(self._anchor_index, idx)
-            for i, frag in enumerate(self._fragments):
-                frag.selected = start <= i <= end
-        else:
-            for frag in self._fragments:
-                frag.selected = False
-            self._fragments[idx].selected = True
-            self._anchor_index = idx
