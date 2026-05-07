@@ -1,5 +1,7 @@
 """Main window of the subtitle cutter application."""
 
+from pathlib import Path
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtCore import QObject, Signal
@@ -218,6 +220,16 @@ class MainWindow(QMainWindow):
         except RuntimeError as e:
             QMessageBox.critical(self, "Render Error", str(e))
 
+    @staticmethod
+    def _find_companion(path, extensions):
+        """Return the first existing file with the same stem but given extensions."""
+        p = Path(path)
+        for ext in extensions:
+            candidate = p.with_suffix(ext)
+            if candidate.exists():
+                return str(candidate)
+        return None
+
     def _open_file(self):
         """Open a file dialog for video or subtitle files."""
         path, selected_filter = QFileDialog.getOpenFileName(
@@ -231,8 +243,20 @@ class MainWindow(QMainWindow):
 
         if path.lower().endswith((".srt", ".ass", ".ssa", ".vtt")):
             self.input_panel.subtitle_input.setText(path)
+            if not self.input_panel.video_input.text():
+                companion = self._find_companion(
+                    path, (".mp4", ".avi", ".mkv", ".mov", ".webm")
+                )
+                if companion:
+                    self.input_panel.video_input.setText(companion)
         else:
             self.input_panel.video_input.setText(path)
+            if not self.input_panel.subtitle_input.text():
+                companion = self._find_companion(
+                    path, (".srt", ".ass", ".ssa", ".vtt")
+                )
+                if companion:
+                    self.input_panel.subtitle_input.setText(companion)
 
     def _load_subtitles(self, path):
         if path and path.endswith(".srt"):
