@@ -36,6 +36,17 @@ class MainWindow(QMainWindow):
         open_action.triggered.connect(self._open_file)
         toolbar.addAction(open_action)
 
+        toolbar.addSeparator()
+
+        self.inline_action = QAction("Inline", self)
+        self.inline_action.setCheckable(True)
+        self.inline_action.setToolTip("Display subtitle fragments inline with wrapping")
+        self.inline_action.toggled.connect(self._toggle_inline)
+        toolbar.addAction(self.inline_action)
+
+    def _toggle_inline(self, checked):
+        self.subtitle_display.set_show_as_inline(checked)
+
     def _open_file(self):
         """Open a file dialog for video or subtitle files."""
         path, selected_filter = QFileDialog.getOpenFileName(
