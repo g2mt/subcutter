@@ -19,6 +19,7 @@ from subcutter.widgets.subtitle_display import SubtitleDisplay
 from subcutter.widgets.media_player import MediaPlayer
 from subcutter.widgets.encoding_tab import EncodingTab
 from subcutter.encoder import Encoder
+from subcutter.extensions import MEDIA_EXTENSIONS, SUBTITLE_EXTENSIONS
 
 
 class MainWindow(QMainWindow):
@@ -236,16 +237,16 @@ class MainWindow(QMainWindow):
             self,
             "Open file",
             "",
-            "Media files (*.mp4 *.avi *.mkv *.mov *.webm);;Subtitle files (*.srt *.ass *.ssa *.vtt);;All files (*)",
+            f"Media files (*{' *'.join(e.lstrip('.') for e in MEDIA_EXTENSIONS)});;Subtitle files (*{' *'.join(e.lstrip('.') for e in SUBTITLE_EXTENSIONS)});;All files (*)",
         )
         if not path:
             return
 
-        if path.lower().endswith((".srt", ".ass", ".ssa", ".vtt")):
+        if path.lower().endswith(SUBTITLE_EXTENSIONS):
             self.input_panel.subtitle_input.setText(path)
             if not self.input_panel.media_input.text():
                 companion = self._find_companion(
-                    path, (".mp4", ".avi", ".mkv", ".mov", ".webm")
+                    path, MEDIA_EXTENSIONS
                 )
                 if companion:
                     self.input_panel.media_input.setText(companion)
@@ -253,7 +254,7 @@ class MainWindow(QMainWindow):
             self.input_panel.media_input.setText(path)
             if not self.input_panel.subtitle_input.text():
                 companion = self._find_companion(
-                    path, (".srt", ".ass", ".ssa", ".vtt")
+                    path, SUBTITLE_EXTENSIONS
                 )
                 if companion:
                     self.input_panel.subtitle_input.setText(companion)
