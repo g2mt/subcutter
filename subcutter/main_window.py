@@ -21,6 +21,8 @@ from subcutter.widgets.input_panel import InputPanel
 from subcutter.widgets.subtitle_display import SubtitleDisplay
 from subcutter.widgets.media_player import MediaPlayer
 from subcutter.widgets.encoding_tab import EncodingTab
+from subcutter.actions.action_history import ActionHistory
+from subcutter.actions.ignore_fragment_action import IgnoreFragmentAction
 from subcutter.encoder import Encoder
 from subcutter.extensions import MEDIA_EXTENSIONS, SUBTITLE_EXTENSIONS, find_companion
 
@@ -44,6 +46,8 @@ class MainWindow(QMainWindow):
         self.encoder = Encoder()
         self.encoder.finished.connect(self._on_render_finished)
 
+        self._action_history = ActionHistory(self)
+
         self.setWindowTitle("Subtitle Cutter")
         self.resize(1200, 800)
 
@@ -51,6 +55,11 @@ class MainWindow(QMainWindow):
         self._build_menubar()
         self._build_toolbar()
         self._build_ui()
+
+        self._action_history.can_undo_changed.connect(self.undo_action.setEnabled)
+        self._action_history.can_redo_changed.connect(self.redo_action.setEnabled)
+        self._action_history.action_performed.connect(self.edited.emit)
+
         self.setProperty("show_as_inline", False)
         self.setStyleSheet(
         """
@@ -107,10 +116,14 @@ class MainWindow(QMainWindow):
         self.undo_action = QAction(QIcon.fromTheme("edit-undo"), "&Undo", self)
         self.undo_action.setShortcut("Ctrl+Z")
         self.undo_action.setToolTip("Undo")
+        self.undo_action.setEnabled(False)
+        self.undo_action.triggered.connect(self._action_history.undo)
 
         self.redo_action = QAction(QIcon.fromTheme("edit-redo"), "&Redo", self)
         self.redo_action.setShortcut("Ctrl+Shift+Z")
         self.redo_action.setToolTip("Redo")
+        self.redo_action.setEnabled(False)
+        self.redo_action.triggered.connect(self._action_history.redo)
 
         self.ignore_fragment_action = QAction(
             QIcon.fromTheme("format-text-strikethrough"), "Ignore Fragment", self
@@ -234,10 +247,7 @@ class MainWindow(QMainWindow):
         selected = [f for f in self.subtitle_display._fragments if f._selected]
         if not selected:
             return
-        state = not selected[0].ignored
-        for frag in selected:
-            frag.ignored = state
-        self.edited.emit()
+        self._action_history.do(IgnoreFragmentAction(selected))
 
     def _render(self):
         """Render the concatenated media file."""
