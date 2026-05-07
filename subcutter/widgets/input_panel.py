@@ -18,13 +18,14 @@ class LineEditWithFile(QWidget):
 
     textChanged = Signal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, placeholder="", parent=None):
         super().__init__(parent)
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(4)
 
         self.line_edit = QLineEdit()
+        self.line_edit.setPlaceholderText(placeholder)
         layout.addWidget(self.line_edit, stretch=1)
 
         self.browse_button = QPushButton()
@@ -46,8 +47,7 @@ class LineEditWithFile(QWidget):
     def setText(self, text):
         self.line_edit.setText(text)
 
-    def setPlaceholderText(self, text):
-        self.line_edit.setPlaceholderText(text)
+
 
 
 class InputPanel(QWidget):
@@ -60,20 +60,17 @@ class InputPanel(QWidget):
 
         # Input media
         layout.addWidget(QLabel("Input media:"))
-        self.media_input = LineEditWithFile()
-        self.media_input.setPlaceholderText("Path to media file…")
+        self.media_input = LineEditWithFile(placeholder="Path to media file…")
         layout.addWidget(self.media_input)
 
         # Subtitle file
-        layout.addWidget(QLabel("Subtitle file (.srt):"))
-        self.subtitle_input = LineEditWithFile()
-        self.subtitle_input.setPlaceholderText("Path to .srt file…")
+        layout.addWidget(QLabel("Subtitle file:"))
+        self.subtitle_input = LineEditWithFile(placeholder="Path to .srt file…")
         layout.addWidget(self.subtitle_input)
 
         # Output file
         layout.addWidget(QLabel("Output file:"))
-        self.output_input = LineEditWithFile()
-        self.output_input.setPlaceholderText("Path to output video…")
+        self.output_input = LineEditWithFile(placeholder="Path to output video…")
         layout.addWidget(self.output_input)
 
         layout.addStretch()
