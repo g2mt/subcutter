@@ -5,7 +5,7 @@ from PySide6.QtMultimediaWidgets import QVideoWidget
 from PySide6.QtWidgets import QSizePolicy, QVBoxLayout, QWidget
 
 
-class VideoPlayer(QWidget):
+class MediaPlayer(QWidget):
     """Video playback widget using QMediaPlayer."""
 
     def __init__(self, parent=None):

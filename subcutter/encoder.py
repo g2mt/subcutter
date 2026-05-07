@@ -15,15 +15,15 @@ class Encoder(QObject):
     def __init__(self):
         super().__init__()
         self._timings = ""
-        self._video_path = None
+        self._media_path = None
 
-    def preprocess(self, fragments, video_path):
+    def preprocess(self, fragments, media_path):
         """Generate concat-format timings for all non-ignored fragments."""
-        if video_path:
-            self._video_path = video_path
+        if media_path:
+            self._media_path = media_path
         else:
-            video_path = "/dev/null"
-            self._video_path = None
+            media_path = "/dev/null"
+            self._media_path = None
 
         self._timings = ""
         for frag in fragments:
@@ -32,7 +32,7 @@ class Encoder(QObject):
             sub = frag.subtitle
             start_sec = sub.start.total_seconds()
             end_sec = sub.end.total_seconds()
-            self._timings += f"file {video_path}\n"
+            self._timings += f"file {media_path}\n"
             self._timings += f"inpoint {start_sec}\n"
             self._timings += f"outpoint {end_sec}\n"
 
@@ -40,7 +40,7 @@ class Encoder(QObject):
 
     def render(self, output_file):
         """Render the concatenated video using ffmpeg."""
-        if not self._timings or not self._video_path:
+        if not self._timings or not self._media_path:
             raise RuntimeError("No timings to render; preprocess first.")
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:

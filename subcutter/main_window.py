@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 
 from subcutter.widgets.input_panel import InputPanel
 from subcutter.widgets.subtitle_display import SubtitleDisplay
-from subcutter.widgets.video_player import VideoPlayer
+from subcutter.widgets.media_player import MediaPlayer
 from subcutter.widgets.encoding_tab import EncodingTab
 from subcutter.encoder import Encoder
 
@@ -164,7 +164,7 @@ class MainWindow(QMainWindow):
         self.subtitle_display = SubtitleDisplay()
 
         # ── Right panel ───────────────────────────────────────────
-        self.video_player = VideoPlayer()
+        self.media_player = MediaPlayer()
 
         self.input_panel = InputPanel()
         self.input_panel.subtitle_input.textChanged.connect(self._load_subtitles)
@@ -173,7 +173,7 @@ class MainWindow(QMainWindow):
         self.edited.connect(
             lambda: self.encoder.preprocess(
                 self.subtitle_display._fragments,
-                self.input_panel.video_input.text(),
+                self.input_panel.media_input.text(),
             )
         )
         self.encoder.timings_updated.connect(
@@ -181,7 +181,7 @@ class MainWindow(QMainWindow):
         )
 
         right_splitter = QSplitter(Qt.Vertical)
-        right_splitter.addWidget(self.video_player)
+        right_splitter.addWidget(self.media_player)
         right_splitter.addWidget(self.input_panel)
         right_splitter.addWidget(self.encoding_tab)
 
@@ -210,7 +210,7 @@ class MainWindow(QMainWindow):
         self.edited.emit()
 
     def _render(self):
-        """Render the concatenated video."""
+        """Render the concatenated media file."""
         output_path = self.input_panel.output_input.text()
         if not output_path:
             QMessageBox.warning(self, "Render", "No output file specified.")
@@ -231,26 +231,26 @@ class MainWindow(QMainWindow):
         return None
 
     def _open_file(self):
-        """Open a file dialog for video or subtitle files."""
+        """Open a file dialog for media or subtitle files."""
         path, selected_filter = QFileDialog.getOpenFileName(
             self,
             "Open file",
             "",
-            "Video files (*.mp4 *.avi *.mkv *.mov *.webm);;Subtitle files (*.srt *.ass *.ssa *.vtt);;All files (*)",
+            "Media files (*.mp4 *.avi *.mkv *.mov *.webm);;Subtitle files (*.srt *.ass *.ssa *.vtt);;All files (*)",
         )
         if not path:
             return
 
         if path.lower().endswith((".srt", ".ass", ".ssa", ".vtt")):
             self.input_panel.subtitle_input.setText(path)
-            if not self.input_panel.video_input.text():
+            if not self.input_panel.media_input.text():
                 companion = self._find_companion(
                     path, (".mp4", ".avi", ".mkv", ".mov", ".webm")
                 )
                 if companion:
-                    self.input_panel.video_input.setText(companion)
+                    self.input_panel.media_input.setText(companion)
         else:
-            self.input_panel.video_input.setText(path)
+            self.input_panel.media_input.setText(path)
             if not self.input_panel.subtitle_input.text():
                 companion = self._find_companion(
                     path, (".srt", ".ass", ".ssa", ".vtt")

@@ -58,11 +58,11 @@ class InputPanel(QWidget):
         layout = QVBoxLayout(self)
         layout.setSpacing(8)
 
-        # Input video
-        layout.addWidget(QLabel("Input video:"))
-        self.video_input = LineEditWithFile()
-        self.video_input.setPlaceholderText("Path to video file…")
-        layout.addWidget(self.video_input)
+        # Input media
+        layout.addWidget(QLabel("Input media:"))
+        self.media_input = LineEditWithFile()
+        self.media_input.setPlaceholderText("Path to media file…")
+        layout.addWidget(self.media_input)
 
         # Subtitle file
         layout.addWidget(QLabel("Subtitle file (.srt):"))
