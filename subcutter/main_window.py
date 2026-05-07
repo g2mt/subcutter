@@ -37,6 +37,24 @@ class MainWindow(QMainWindow):
         self._build_menubar()
         self._build_toolbar()
         self._build_ui()
+        self.setProperty("show_as_inline", False)
+        self.setStyleSheet(
+            'MainWindow[show_as_inline="true"] SubtitleFragment {\n'
+            "  background-color: #e8e8e8;\n"
+            "  border: 1px solid #bbb;\n"
+            "  border-radius: 4px;\n"
+            "  padding: 2px 6px;\n"
+            "}\n"
+            'MainWindow[show_as_inline="true"] SubtitleFragment:hover {\n'
+            "  background-color: #d0d0d0;\n"
+            "}\n"
+            'SubtitleFragment[selected="true"] {\n'
+            "  background-color: #add8e6;\n"
+            "}\n"
+            'SubtitleFragment[selected="true"]:hover {\n'
+            "  background-color: #add8e6;\n"
+            "}\n"
+        )
 
     #### Properties
 
@@ -46,6 +64,9 @@ class MainWindow(QMainWindow):
     def set_show_as_inline(self, value):
         if self._show_as_inline != value:
             self._show_as_inline = value
+            self.setProperty("show_as_inline", value)
+            self.style().unpolish(self)
+            self.style().polish(self)
             self.show_as_inline_changed.emit(value)
 
     #### UI

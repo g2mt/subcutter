@@ -1,6 +1,7 @@
 """Rich-text subtitle display with highlightable fragments."""
 
-from PySide6.QtWidgets import QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QScrollArea, QVBoxLayout, QWidget
 import srt
 
 from subcutter.widgets.flow_layout import FlowLayout
@@ -16,6 +17,7 @@ class SubtitleDisplay(QScrollArea):
         super().__init__(parent)
         self._fragments = []
         self._current_subtitles = []
+        self._anchor_index = None
 
         self.setWidgetResizable(True)
         self.setFrameShape(QScrollArea.NoFrame)
@@ -43,10 +45,14 @@ class SubtitleDisplay(QScrollArea):
     def _on_show_as_inline_changed(self, show_as_inline=False):
         """Create fragment widgets from current subtitles."""
         for frag in self._fragments:
-            self._layout.removeWidget(frag)
+            try:
+                self._layout.removeWidget(frag)
+            except Exception:
+                pass
             frag.deleteLater()
 
         self._fragments.clear()
+        self._anchor_index = None
 
         old_layout = self._layout
         if show_as_inline:
@@ -58,6 +64,7 @@ class SubtitleDisplay(QScrollArea):
             self._layout.setSpacing(0)
         for sub in self._current_subtitles:
             frag = SubtitleFragment(sub, show_as_inline=show_as_inline)
+            frag.clicked.connect(self._on_fragment_clicked)
             self._fragments.append(frag)
             self._layout.addWidget(frag)
         if not show_as_inline:
@@ -66,3 +73,25 @@ class SubtitleDisplay(QScrollArea):
         if old_layout is not None:
             QWidget().setLayout(old_layout)
         self._container.setLayout(self._layout)
+
+    def _on_fragment_clicked(self, subtitle):
+        """Handle fragment click, supporting shift-click range selection."""
+        idx = next(
+            (i for i, s in enumerate(self._current_subtitles) if s is subtitle),
+            None,
+        )
+        if idx is None:
+            return
+
+        modifiers = QApplication.keyboardModifiers()
+
+        if modifiers & Qt.ShiftModifier and self._anchor_index is not None:
+            start = min(self._anchor_index, idx)
+            end = max(self._anchor_index, idx)
+            for i, frag in enumerate(self._fragments):
+                frag.set_selected(start <= i <= end)
+        else:
+            for frag in self._fragments:
+                frag.set_selected(False)
+            self._fragments[idx].set_selected(True)
+            self._anchor_index = idx
