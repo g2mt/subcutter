@@ -17,6 +17,7 @@ class Encoder(QObject):
         self._timings = ""
         self._media_path = None
         self._output = ""
+        self._output_path = ""
         self._process = None
 
     #### Properties
@@ -24,6 +25,10 @@ class Encoder(QObject):
     @property
     def output(self):
         return self._output
+
+    @property
+    def output_path(self):
+        return self._output_path
 
     #### Events
 
@@ -55,11 +60,12 @@ class Encoder(QObject):
 
         self.timings_updated.emit(self._timings)
 
-    def render(self, output_file):
+    def render(self, output_path):
         """Render the concatenated video using ffmpeg in the background."""
         if not self._timings or not self._media_path:
             raise RuntimeError("No timings to render; preprocess first.")
 
+        self._output_path = output_path
         self._output = ""
         self.output_changed.emit(self._output)
 
@@ -76,4 +82,4 @@ class Encoder(QObject):
         self._process.setProcessChannelMode(QProcess.MergedChannels)
         self._process.readyReadStandardOutput.connect(self._on_output)
         self._process.finished.connect(lambda *_: self.finished.emit())
-        self._process.start("ffmpeg", ["-f", "concat", "-safe", "0", "-i", list_path, output_file])
+        self._process.start("ffmpeg", ["-f", "concat", "-safe", "0", "-i", list_path, output_path])

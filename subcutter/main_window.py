@@ -1,6 +1,7 @@
 """Main window of the subtitle cutter application."""
 
 import shutil
+import subprocess
 import tempfile
 from pathlib import Path
 
@@ -41,6 +42,7 @@ class MainWindow(QMainWindow):
         self._tmpdir = tempfile.mkdtemp(prefix="subcutter_")
         self.destroyed.connect(lambda: shutil.rmtree(self._tmpdir, ignore_errors=True))
         self.encoder = Encoder()
+        self.encoder.finished.connect(self._on_render_finished)
 
         self.setWindowTitle("Subtitle Cutter")
         self.resize(1200, 800)
@@ -208,6 +210,23 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(main_splitter)
 
+    #### Events
+
+    def _on_render_finished(self):
+        self.media_player.load_file(self.encoder.output_path)
+        self.show_notify("Render Complete", f"Video rendered to {self.encoder.output_path}")
+
+    #### Notifications
+
+    def show_notify(self, title, text):
+        """Show a desktop notification (notify-send) or fall back to QMessageBox."""
+        if shutil.which("notify-send"):
+            subprocess.Popen(
+                ["notify-send", title, text]
+            )
+        else:
+            QMessageBox.information(self, title, text)
+
     #### Actions
 
     def _toggle_ignore_selected(self):
@@ -226,7 +245,6 @@ class MainWindow(QMainWindow):
         if not output_path:
             output_path = Path(self._tmpdir, "render.mp4")
         try:
-            self.encoder.finished.connect(lambda: self.media_player.load_file(output_path))
             self.encoder.render(output_path)
         except RuntimeError as e:
             QMessageBox.critical(self, "Render Error", str(e))
