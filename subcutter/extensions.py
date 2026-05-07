@@ -1,5 +1,7 @@
 """File extension constants for media and subtitle files."""
 
+from pathlib import Path
+
 MEDIA_EXTENSIONS = (
     ".3gp",
     ".aac",
