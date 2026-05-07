@@ -89,9 +89,9 @@ class SubtitleDisplay(QScrollArea):
             start = min(self._anchor_index, idx)
             end = max(self._anchor_index, idx)
             for i, frag in enumerate(self._fragments):
-                frag.set_selected(start <= i <= end)
+                frag.selected = start <= i <= end
         else:
             for frag in self._fragments:
-                frag.set_selected(False)
-            self._fragments[idx].set_selected(True)
+                frag.selected = False
+            self._fragments[idx].selected = True
             self._anchor_index = idx

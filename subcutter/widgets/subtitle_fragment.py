@@ -36,7 +36,12 @@ class SubtitleFragment(QFrame):
 
     #### Properties
 
-    def set_selected(self, selected):
+    @property
+    def selected(self):
+        return self._selected
+
+    @selected.setter
+    def selected(self, selected):
         """Set the selection state of this fragment."""
         if self._selected == selected:
             return
