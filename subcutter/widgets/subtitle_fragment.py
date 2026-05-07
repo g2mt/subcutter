@@ -32,7 +32,7 @@ class SubtitleFragment(QFrame):
         self._layout.addWidget(self._content_label)
         self._layout.addStretch()
 
-    #### State
+    #### Properties
 
     def set_selected(self, selected):
         """Set the selection state of this fragment."""

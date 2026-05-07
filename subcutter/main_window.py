@@ -39,21 +39,21 @@ class MainWindow(QMainWindow):
         self._build_ui()
         self.setProperty("show_as_inline", False)
         self.setStyleSheet(
-            'MainWindow[show_as_inline="true"] SubtitleFragment {\n'
-            "  background-color: #e8e8e8;\n"
-            "  border: 1px solid #bbb;\n"
-            "  border-radius: 4px;\n"
-            "  padding: 2px 6px;\n"
-            "}\n"
-            'MainWindow[show_as_inline="true"] SubtitleFragment:hover {\n'
-            "  background-color: #d0d0d0;\n"
-            "}\n"
-            'SubtitleFragment[selected="true"] {\n'
-            "  background-color: #add8e6;\n"
-            "}\n"
-            'SubtitleFragment[selected="true"]:hover {\n'
-            "  background-color: #add8e6;\n"
-            "}\n"
+        """
+            MainWindow[show_as_inline=true] SubtitleFragment {
+              background-color: #e8e8e8;
+              border: 1px solid #bbb;
+              border-radius: 4px;
+              padding: 2px 6px;
+            }
+            MainWindow[show_as_inline=true] SubtitleFragment:hover {
+              background-color: #d0d0d0;
+            }
+            SubtitleFragment[selected=true],
+            MainWindow[show_as_inline=true] SubtitleFragment[selected=true] {
+              background-color: #add8e6 !important;
+            }
+        """
         )
 
     #### Properties
