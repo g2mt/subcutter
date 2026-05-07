@@ -19,7 +19,7 @@ from subcutter.widgets.subtitle_display import SubtitleDisplay
 from subcutter.widgets.media_player import MediaPlayer
 from subcutter.widgets.encoding_tab import EncodingTab
 from subcutter.encoder import Encoder
-from subcutter.extensions import MEDIA_EXTENSIONS, SUBTITLE_EXTENSIONS
+from subcutter.extensions import MEDIA_EXTENSIONS, SUBTITLE_EXTENSIONS, find_companion
 
 
 class MainWindow(QMainWindow):
@@ -221,16 +221,6 @@ class MainWindow(QMainWindow):
         except RuntimeError as e:
             QMessageBox.critical(self, "Render Error", str(e))
 
-    @staticmethod
-    def _find_companion(path, extensions):
-        """Return the first existing file with the same stem but given extensions."""
-        p = Path(path)
-        for ext in extensions:
-            candidate = p.with_suffix(ext)
-            if candidate.exists():
-                return str(candidate)
-        return None
-
     def _open_file(self):
         """Open a file dialog for media or subtitle files."""
         path, selected_filter = QFileDialog.getOpenFileName(
@@ -245,7 +235,7 @@ class MainWindow(QMainWindow):
         if path.lower().endswith(SUBTITLE_EXTENSIONS):
             self.input_panel.subtitle_input.setText(path)
             if not self.input_panel.media_input.text():
-                companion = self._find_companion(
+                companion = find_companion(
                     path, MEDIA_EXTENSIONS
                 )
                 if companion:
@@ -253,7 +243,7 @@ class MainWindow(QMainWindow):
         else:
             self.input_panel.media_input.setText(path)
             if not self.input_panel.subtitle_input.text():
-                companion = self._find_companion(
+                companion = find_companion(
                     path, SUBTITLE_EXTENSIONS
                 )
                 if companion:
