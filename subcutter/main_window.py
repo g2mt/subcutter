@@ -9,7 +9,9 @@ from PySide6.QtWidgets import (
     QToolBar,
 )
 
-from subcutter.widgets import InputPanel, SubtitleDisplay, VideoPlayer
+from subcutter.widgets.input_panel import InputPanel
+from subcutter.widgets.subtitle_display import SubtitleDisplay
+from subcutter.widgets.video_player import VideoPlayer
 
 
 class MainWindow(QMainWindow):
