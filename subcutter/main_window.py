@@ -1,7 +1,13 @@
 """Main window of the subtitle cutter application."""
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QMainWindow, QSplitter
+from PySide6.QtGui import QAction, QIcon
+from PySide6.QtWidgets import (
+    QFileDialog,
+    QMainWindow,
+    QSplitter,
+    QToolBar,
+)
 
 from subcutter.widgets import InputPanel, SubtitleDisplay, VideoPlayer
 
@@ -14,7 +20,35 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Subtitle Cutter")
         self.resize(1200, 800)
 
+        self._build_toolbar()
         self._build_ui()
+
+    def _build_toolbar(self):
+        toolbar = QToolBar("Main toolbar", self)
+        toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        toolbar.setMovable(False)
+        self.addToolBar(toolbar)
+
+        open_action = QAction(QIcon.fromTheme("document-open"), "Open file", self)
+        open_action.setToolTip("Open a video or subtitle file")
+        open_action.triggered.connect(self._open_file)
+        toolbar.addAction(open_action)
+
+    def _open_file(self):
+        """Open a file dialog for video or subtitle files."""
+        path, selected_filter = QFileDialog.getOpenFileName(
+            self,
+            "Open file",
+            "",
+            "Video files (*.mp4 *.avi *.mkv *.mov *.webm);;Subtitle files (*.srt *.ass *.ssa *.vtt);;All files (*)",
+        )
+        if not path:
+            return
+
+        if path.lower().endswith((".srt", ".ass", ".ssa", ".vtt")):
+            self.input_panel.subtitle_input.setText(path)
+        else:
+            self.input_panel.video_input.setText(path)
 
     def _build_ui(self):
         # ── Left panel ────────────────────────────────────────────
