@@ -169,6 +169,7 @@ class MainWindow(QMainWindow):
 
         self.input_panel = InputPanel()
         self.input_panel.subtitle_input.textChanged.connect(self._load_subtitles)
+        self.input_panel.media_input.textChanged.connect(self._load_media)
 
         self.encoding_tab = EncodingTab()
         self.edited.connect(
@@ -185,6 +186,7 @@ class MainWindow(QMainWindow):
         right_splitter.addWidget(self.media_player)
         right_splitter.addWidget(self.input_panel)
         right_splitter.addWidget(self.encoding_tab)
+        right_splitter.setSizes([300, 200, 200])
 
         # ── Main splitter ─────────────────────────────────────────
         main_splitter = QSplitter(Qt.Horizontal)
@@ -218,6 +220,7 @@ class MainWindow(QMainWindow):
             return
         try:
             self.encoder.render(output_path)
+            self.media_player.load_file(output_path)
         except RuntimeError as e:
             QMessageBox.critical(self, "Render Error", str(e))
 
@@ -248,6 +251,10 @@ class MainWindow(QMainWindow):
                 )
                 if companion:
                     self.input_panel.subtitle_input.setText(companion)
+
+    def _load_media(self, path):
+        if path and Path(path).suffix.lower() in MEDIA_EXTENSIONS:
+            self.media_player.load_file(path)
 
     def _load_subtitles(self, path):
         if path and path.endswith(".srt"):
