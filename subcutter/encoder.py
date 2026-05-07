@@ -1,21 +1,38 @@
 """Encodes subtitle timings into ffmpeg concat format."""
 
-import subprocess
 import os
-import tempfile
 
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, QProcess, Signal
 
 
 class Encoder(QObject):
     """Generates ffmpeg concat timings from unignored subtitle fragments."""
 
     timings_updated = Signal(str)
+    output_changed = Signal(str)
+    finished = Signal()
 
     def __init__(self):
         super().__init__()
         self._timings = ""
         self._media_path = None
+        self._output = ""
+        self._process = None
+
+    #### Properties
+
+    @property
+    def output(self):
+        return self._output
+
+    #### Events
+
+    def _on_output(self):
+        data = self._process.readAllStandardOutput().data().decode()
+        self._output += data
+        self.output_changed.emit(self._output)
+
+    #### Actions
 
     def preprocess(self, fragments, media_path):
         """Generate concat-format timings for all non-ignored fragments."""
@@ -39,24 +56,24 @@ class Encoder(QObject):
         self.timings_updated.emit(self._timings)
 
     def render(self, output_file):
-        """Render the concatenated video using ffmpeg."""
+        """Render the concatenated video using ffmpeg in the background."""
         if not self._timings or not self._media_path:
             raise RuntimeError("No timings to render; preprocess first.")
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+        self._output = ""
+        self.output_changed.emit(self._output)
+
+        from subcutter.main_window import MainWindow
+        list_path = os.path.join(MainWindow.singleton._tmpdir, "concat_list.txt")
+        with open(list_path, "w") as f:
             f.write(self._timings)
-            list_path = f.name
 
-        try:
-            result = subprocess.run(
-                ["ffmpeg", "-f", "concat", "-i", list_path, output_file],
-                capture_output=True,
-                text=True,
-            )
-            if result.returncode != 0:
-                raise RuntimeError(
-                    f"ffmpeg failed (exit {result.returncode}): {result.stderr.strip()}"
-                )
-        finally:
-            os.unlink(list_path)
+        if self._process is not None:
+            self._process.kill()
+            self._process.waitForFinished()
 
+        self._process = QProcess(self)
+        self._process.setProcessChannelMode(QProcess.MergedChannels)
+        self._process.readyReadStandardOutput.connect(self._on_output)
+        self._process.finished.connect(lambda *_: self.finished.emit())
+        self._process.start("ffmpeg", ["-f", "concat", "-safe", "0", "-i", list_path, output_file])

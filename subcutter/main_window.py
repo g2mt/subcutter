@@ -1,5 +1,7 @@
 """Main window of the subtitle cutter application."""
 
+import shutil
+import tempfile
 from pathlib import Path
 
 from PySide6.QtCore import Qt
@@ -36,6 +38,8 @@ class MainWindow(QMainWindow):
         MainWindow.singleton = self
 
         self._show_as_inline = False
+        self._tmpdir = tempfile.mkdtemp(prefix="subcutter_")
+        self.destroyed.connect(lambda: shutil.rmtree(self._tmpdir, ignore_errors=True))
         self.encoder = Encoder()
 
         self.setWindowTitle("Subtitle Cutter")
@@ -168,6 +172,7 @@ class MainWindow(QMainWindow):
         self.media_player = MediaPlayer()
 
         self.input_panel = InputPanel()
+
         self.input_panel.subtitle_input.textChanged.connect(self._load_subtitles)
         self.input_panel.media_input.textChanged.connect(self._load_media)
 
@@ -180,6 +185,9 @@ class MainWindow(QMainWindow):
         )
         self.encoder.timings_updated.connect(
             self.encoding_tab.timings_text.setPlainText
+        )
+        self.encoder.output_changed.connect(
+            self.encoding_tab.output_text.setPlainText
         )
 
         right_splitter = QSplitter(Qt.Vertical)
@@ -216,11 +224,10 @@ class MainWindow(QMainWindow):
         """Render the concatenated media file."""
         output_path = self.input_panel.output_input.text()
         if not output_path:
-            QMessageBox.warning(self, "Render", "No output file specified.")
-            return
+            output_path = Path(self._tmpdir, "render.mp4")
         try:
+            self.encoder.finished.connect(lambda: self.media_player.load_file(output_path))
             self.encoder.render(output_path)
-            self.media_player.load_file(output_path)
         except RuntimeError as e:
             QMessageBox.critical(self, "Render Error", str(e))
 

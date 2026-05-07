@@ -1,6 +1,8 @@
 """Video playback widget using QMediaPlayer."""
 
-from PySide6.QtCore import QSize, Qt
+from pathlib import Path
+
+from PySide6.QtCore import QSize, Qt, QUrl
 from PySide6.QtGui import QIcon
 from PySide6.QtMultimedia import QMediaPlayer
 from PySide6.QtMultimediaWidgets import QVideoWidget
@@ -68,7 +70,7 @@ class MediaPlayer(QWidget):
 
     def load_file(self, path):
         """Load a media file for playback."""
-        self._player.setSource(path)
+        self._player.setSource(QUrl.fromLocalFile(str(path)))
 
     def _toggle_play(self):
         if self._player.playbackState() == QMediaPlayer.PlayingState:
