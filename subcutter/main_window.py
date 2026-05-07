@@ -6,6 +6,7 @@ from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import (
     QFileDialog,
     QMainWindow,
+    QMenu,
     QSplitter,
     QToolBar,
 )
@@ -31,6 +32,9 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("Subtitle Cutter")
         self.resize(1200, 800)
+
+        self._build_actions()
+        self._build_menubar()
         self._build_toolbar()
         self._build_ui()
 
@@ -46,23 +50,74 @@ class MainWindow(QMainWindow):
 
     #### UI
 
+    def _build_actions(self):
+        self.new_action = QAction(QIcon.fromTheme("document-new"), "&New", self)
+        self.new_action.setShortcut("Ctrl+N")
+        self.new_action.setToolTip("New project")
+
+        self.open_action = QAction(QIcon.fromTheme("document-open"), "&Open...", self)
+        self.open_action.setShortcut("Ctrl+O")
+        self.open_action.setToolTip("Open a video or subtitle file")
+        self.open_action.triggered.connect(self._open_file)
+
+        self.save_action = QAction(QIcon.fromTheme("document-save"), "&Save", self)
+        self.save_action.setShortcut("Ctrl+S")
+        self.save_action.setToolTip("Save project")
+
+        self.quit_action = QAction(QIcon.fromTheme("application-exit"), "&Quit", self)
+        self.quit_action.setShortcut("Ctrl+Q")
+        self.quit_action.setToolTip("Quit application")
+        self.quit_action.triggered.connect(self.close)
+
+        self.undo_action = QAction(QIcon.fromTheme("edit-undo"), "&Undo", self)
+        self.undo_action.setShortcut("Ctrl+Z")
+        self.undo_action.setToolTip("Undo")
+
+        self.redo_action = QAction(QIcon.fromTheme("edit-redo"), "&Redo", self)
+        self.redo_action.setShortcut("Ctrl+Shift+Z")
+        self.redo_action.setToolTip("Redo")
+
+        self.ignore_fragment_action = QAction(
+            QIcon.fromTheme("format-text-strikethrough"), "Ignore Fragment", self
+        )
+        self.ignore_fragment_action.setCheckable(True)
+        self.ignore_fragment_action.setToolTip("Mark the selected fragment as ignored")
+
+        self.inline_action = QAction(
+            QIcon.fromTheme("format-justify-fill"), "Inline Subtitles", self
+        )
+        self.inline_action.setCheckable(True)
+        self.inline_action.setToolTip("Display subtitle fragments inline with wrapping")
+        self.inline_action.toggled.connect(self.set_show_as_inline)
+
+    def _build_menubar(self):
+        menubar = self.menuBar()
+
+        file_menu = menubar.addMenu("&File")
+        file_menu.addAction(self.new_action)
+        file_menu.addAction(self.open_action)
+        file_menu.addAction(self.save_action)
+        file_menu.addSeparator()
+        file_menu.addAction(self.quit_action)
+
+        edit_menu = menubar.addMenu("&Edit")
+        edit_menu.addAction(self.undo_action)
+        edit_menu.addAction(self.redo_action)
+
     def _build_toolbar(self):
         toolbar = QToolBar("Main toolbar", self)
         toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         toolbar.setMovable(False)
         self.addToolBar(toolbar)
 
-        open_action = QAction(QIcon.fromTheme("document-open"), "Open file", self)
-        open_action.setToolTip("Open a video or subtitle file")
-        open_action.triggered.connect(self._open_file)
-        toolbar.addAction(open_action)
+        toolbar.addAction(self.open_action)
+        toolbar.addAction(self.save_action)
+        toolbar.addAction(self.undo_action)
+        toolbar.addAction(self.redo_action)
 
         toolbar.addSeparator()
 
-        self.inline_action = QAction("Inline", self)
-        self.inline_action.setCheckable(True)
-        self.inline_action.setToolTip("Display subtitle fragments inline with wrapping")
-        self.inline_action.toggled.connect(self.set_show_as_inline)
+        toolbar.addAction(self.ignore_fragment_action)
         toolbar.addAction(self.inline_action)
 
     def _build_ui(self):
