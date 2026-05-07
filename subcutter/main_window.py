@@ -14,12 +14,15 @@ from PySide6.QtWidgets import (
 from subcutter.widgets.input_panel import InputPanel
 from subcutter.widgets.subtitle_display import SubtitleDisplay
 from subcutter.widgets.video_player import VideoPlayer
+from subcutter.widgets.encoding_tab import EncodingTab
+from subcutter.encoder import Encoder
 
 
 class MainWindow(QMainWindow):
     """Top-level window with a two-panel split layout."""
     singleton = None
     show_as_inline_changed = Signal(bool)
+    edited = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -29,6 +32,7 @@ class MainWindow(QMainWindow):
         MainWindow.singleton = self
 
         self._show_as_inline = False
+        self.encoder = Encoder()
 
         self.setWindowTitle("Subtitle Cutter")
         self.resize(1200, 800)
@@ -52,12 +56,6 @@ class MainWindow(QMainWindow):
             SubtitleFragment[selected=true],
             MainWindow[show_as_inline=true] SubtitleFragment[selected=true] {
               background-color: #add8e6 !important;
-            }
-            SubtitleFragment[ignored=true] {
-              color: #999999;
-            }
-            SubtitleFragment[ignored=true] QLabel {
-              color: #999999;
             }
         """
         )
@@ -153,14 +151,25 @@ class MainWindow(QMainWindow):
 
         # ── Right panel ───────────────────────────────────────────
         self.video_player = VideoPlayer()
-        self.input_panel = InputPanel()
 
-        # Connect file loading to trigger subtitle parsing
+        self.input_panel = InputPanel()
         self.input_panel.subtitle_input.textChanged.connect(self._load_subtitles)
+
+        self.encoding_tab = EncodingTab()
+        self.edited.connect(
+            lambda: self.encoder.preprocess(
+                self.subtitle_display._fragments,
+                self.input_panel.video_input.text(),
+            )
+        )
+        self.encoder.timings_updated.connect(
+            self.encoding_tab.timings_text.setPlainText
+        )
 
         right_splitter = QSplitter(Qt.Vertical)
         right_splitter.addWidget(self.video_player)
         right_splitter.addWidget(self.input_panel)
+        right_splitter.addWidget(self.encoding_tab)
 
         # ── Main splitter ─────────────────────────────────────────
         main_splitter = QSplitter(Qt.Horizontal)
@@ -184,6 +193,7 @@ class MainWindow(QMainWindow):
         state = not selected[0].ignored
         for frag in selected:
             frag.ignored = state
+        self.edited.emit()
 
     def _open_file(self):
         """Open a file dialog for video or subtitle files."""
