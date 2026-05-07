@@ -1,5 +1,7 @@
 """Rich-text subtitle display with highlightable fragments."""
 
+import json
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QScrollArea, QVBoxLayout, QWidget
 import srt
@@ -73,6 +75,41 @@ class SubtitleDisplay(QScrollArea):
         if old_layout is not None:
             QWidget().setLayout(old_layout)
         self._container.setLayout(self._layout)
+
+    def save(self):
+        """Serialize subtitle display state (subtitles + ignored states) to a JSON string."""
+        return json.dumps({
+            "subtitles": [
+                {
+                    "index": sub.index,
+                    "start": srt.timedelta_to_srt_timestamp(sub.start),
+                    "end": srt.timedelta_to_srt_timestamp(sub.end),
+                    "content": sub.content,
+                    "proprietary": sub.proprietary,
+                    "ignored": self._fragments[i].ignored if i < len(self._fragments) else False,
+                }
+                for i, sub in enumerate(self._current_subtitles)
+            ]
+        })
+
+    def load(self, json_str):
+        """Restore subtitle display state (subtitles + ignored states) from a JSON string."""
+        data = json.loads(json_str)
+        subs = data.get("subtitles", [])
+        self._current_subtitles = [
+            srt.Subtitle(
+                index=s.get("index"),
+                start=srt.srt_timestamp_to_timedelta(s["start"]),
+                end=srt.srt_timestamp_to_timedelta(s["end"]),
+                content=s["content"],
+                proprietary=s.get("proprietary", ""),
+            )
+            for s in subs
+        ]
+        self._refresh_fragments()
+        for i, s in enumerate(subs):
+            if i < len(self._fragments) and s.get("ignored", False):
+                self._fragments[i].ignored = True
 
     def _on_fragment_clicked(self, subtitle):
         """Handle fragment click, supporting shift-click range selection."""

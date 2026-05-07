@@ -1,5 +1,7 @@
 """Container for input fields: video path and subtitle path."""
 
+import json
+
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
@@ -74,3 +76,21 @@ class InputPanel(QWidget):
         layout.addWidget(self.output_input)
 
         layout.addStretch()
+
+    def save(self):
+        """Serialize input panel state to a JSON string."""
+        return json.dumps({
+            "media_input": self.media_input.text(),
+            "subtitle_input": self.subtitle_input.text(),
+            "output_input": self.output_input.text(),
+        })
+
+    def load(self, json_str):
+        """Restore input panel state from a JSON string."""
+        data = json.loads(json_str)
+        if "media_input" in data:
+            self.media_input.setText(data["media_input"])
+        if "subtitle_input" in data:
+            self.subtitle_input.setText(data["subtitle_input"])
+        if "output_input" in data:
+            self.output_input.setText(data["output_input"])

@@ -1,11 +1,12 @@
 """Main window of the subtitle cutter application."""
 
+import json
 import shutil
 import subprocess
 import tempfile
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QStandardPaths
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import (
@@ -48,6 +49,9 @@ class MainWindow(QMainWindow):
 
         self._action_history = ActionHistory(self)
 
+        app_dir = Path(QStandardPaths.writableLocation(QStandardPaths.AppLocalDataLocation))
+        self._state_path = app_dir / "subcutter" / "state.json"
+
         self.setWindowTitle("Subtitle Cutter")
         self.resize(1200, 800)
 
@@ -78,6 +82,7 @@ class MainWindow(QMainWindow):
             }
         """
         )
+        self.load_file()
 
     #### Properties
 
@@ -91,6 +96,34 @@ class MainWindow(QMainWindow):
             self.style().unpolish(self)
             self.style().polish(self)
             self.show_as_inline_changed.emit(value)
+
+    #### Saving/loading
+
+    def save_file(self):
+        """Serialize current state to state.json."""
+        data = {
+            "input_panel": json.loads(self.input_panel.save()),
+            "subtitle_display": json.loads(self.subtitle_display.save()),
+        }
+        self._state_path.parent.mkdir(parents=True, exist_ok=True)
+        self._state_path.write_text(json.dumps(data, indent=2))
+
+    def load_file(self):
+        """Deserialize state from state.json and restore widgets."""
+        if not self._state_path.exists():
+            return
+        try:
+            data = json.loads(self._state_path.read_text())
+        except (json.JSONDecodeError, OSError):
+            return
+        if "input_panel" in data:
+            self.input_panel.load(json.dumps(data["input_panel"]))
+        if "subtitle_display" in data:
+            self.subtitle_display.load(json.dumps(data["subtitle_display"]))
+
+    def closeEvent(self, event):
+        self.save_file()
+        super().closeEvent(event)
 
     #### UI
 
