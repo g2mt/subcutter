@@ -2,6 +2,7 @@
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QIcon
+from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import (
     QFileDialog,
     QMainWindow,
@@ -16,14 +17,34 @@ from subcutter.widgets.video_player import VideoPlayer
 
 class MainWindow(QMainWindow):
     """Top-level window with a two-panel split layout."""
+    singleton = None
+    show_as_inline_changed = Signal(bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
+
+        if MainWindow.singleton is not None:
+            raise RuntimeError()
+        MainWindow.singleton = self
+
+        self._show_as_inline = False
+
         self.setWindowTitle("Subtitle Cutter")
         self.resize(1200, 800)
-
         self._build_toolbar()
         self._build_ui()
+
+    #### Properties
+
+    def show_as_inline(self):
+        return self._show_as_inline
+
+    def set_show_as_inline(self, value):
+        if self._show_as_inline != value:
+            self._show_as_inline = value
+            self.show_as_inline_changed.emit(value)
+
+    #### UI
 
     def _build_toolbar(self):
         toolbar = QToolBar("Main toolbar", self)
@@ -41,32 +62,13 @@ class MainWindow(QMainWindow):
         self.inline_action = QAction("Inline", self)
         self.inline_action.setCheckable(True)
         self.inline_action.setToolTip("Display subtitle fragments inline with wrapping")
-        self.inline_action.toggled.connect(self._toggle_inline)
+        self.inline_action.toggled.connect(self.set_show_as_inline)
         toolbar.addAction(self.inline_action)
-
-    def _toggle_inline(self, checked):
-        self.subtitle_display.set_show_as_inline(checked)
-
-    def _open_file(self):
-        """Open a file dialog for video or subtitle files."""
-        path, selected_filter = QFileDialog.getOpenFileName(
-            self,
-            "Open file",
-            "",
-            "Video files (*.mp4 *.avi *.mkv *.mov *.webm);;Subtitle files (*.srt *.ass *.ssa *.vtt);;All files (*)",
-        )
-        if not path:
-            return
-
-        if path.lower().endswith((".srt", ".ass", ".ssa", ".vtt")):
-            self.input_panel.subtitle_input.setText(path)
-        else:
-            self.input_panel.video_input.setText(path)
 
     def _build_ui(self):
         # ── Left panel ────────────────────────────────────────────
         self.subtitle_display = SubtitleDisplay()
-        
+
         # ── Right panel ───────────────────────────────────────────
         self.video_player = VideoPlayer()
         self.input_panel = InputPanel()
@@ -90,6 +92,25 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(main_splitter)
 
+    #### Actions
+
+    def _open_file(self):
+        """Open a file dialog for video or subtitle files."""
+        path, selected_filter = QFileDialog.getOpenFileName(
+            self,
+            "Open file",
+            "",
+            "Video files (*.mp4 *.avi *.mkv *.mov *.webm);;Subtitle files (*.srt *.ass *.ssa *.vtt);;All files (*)",
+        )
+        if not path:
+            return
+
+        if path.lower().endswith((".srt", ".ass", ".ssa", ".vtt")):
+            self.input_panel.subtitle_input.setText(path)
+        else:
+            self.input_panel.video_input.setText(path)
+
     def _load_subtitles(self, path):
         if path and path.endswith(".srt"):
             self.subtitle_display.load_subtitles(path)
+
