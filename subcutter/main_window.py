@@ -239,8 +239,7 @@ class MainWindow(QMainWindow):
 
         # ── Right panel ───────────────────────────────────────────
         self.media_player = MediaPlayer()
-
-        self.media_player._player.positionChanged.connect(self.subtitle_display.set_playing_position)
+        self.media_player._player.positionChanged.connect(self.subtitle_display.update_playing_position)
 
         self.input_panel = InputPanel()
 
@@ -283,7 +282,6 @@ class MainWindow(QMainWindow):
         self.render_action.setEnabled(not running)
         self.stop_action.setEnabled(running)
         if not running and self.encoder.output_path:
-            self.media_player.load_file(self.encoder.output_path)
             self.show_notify("Render Complete", f"Video rendered to {self.encoder.output_path}")
 
     def _on_selected_fragment_changed(self, fragment: SubtitleFragment | None) -> None:
