@@ -1,5 +1,7 @@
 """Video playback widget using QMediaPlayer."""
 
+from __future__ import annotations
+
 from pathlib import Path
 
 from PySide6.QtCore import QSize, Qt, QUrl
@@ -21,7 +23,7 @@ from subcutter.extensions import MEDIA_EXTENSIONS
 class MediaPlayer(QWidget):
     """Video playback widget using QMediaPlayer."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setAcceptDrops(True)
         self._player = QMediaPlayer(self)
@@ -62,10 +64,10 @@ class MediaPlayer(QWidget):
 
     #### Events
 
-    def _on_duration_changed(self, duration):
+    def _on_duration_changed(self, duration: int) -> None:
         self._seek_slider.setRange(0, duration)
 
-    def _on_state_changed(self, state):
+    def _on_state_changed(self, state: QMediaPlayer.PlaybackState) -> None:
         if state == QMediaPlayer.PlayingState:
             self._play_button.setIcon(QIcon.fromTheme("media-playback-pause"))
             self._play_button.setToolTip("Pause")
@@ -92,26 +94,26 @@ class MediaPlayer(QWidget):
 
     #### Actions
 
-    def load_file(self, path):
+    def load_file(self, path: str | Path) -> None:
         """Load a media file for playback."""
         self._player.setSource(QUrl.fromLocalFile(str(path)))
 
-    def _update_slider(self, position):
+    def _update_slider(self, position: int) -> None:
         if not self._seek_slider.isSliderDown():
             self._seek_slider.setValue(position)
 
-    def _seek(self, position):
+    def _seek(self, position: int) -> None:
         self._player.setPosition(position)
 
-    def _prepare_seek(self):
+    def _prepare_seek(self) -> None:
         self._was_playing = self._player.playbackState() == QMediaPlayer.PlayingState
         self._player.pause()
 
-    def _end_seek(self):
+    def _end_seek(self) -> None:
         if self._was_playing:
             self._player.play()
 
-    def _toggle_play(self):
+    def _toggle_play(self) -> None:
         if self._player.playbackState() == QMediaPlayer.PlayingState:
             self._player.pause()
         else:

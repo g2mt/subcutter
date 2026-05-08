@@ -1,5 +1,7 @@
 """Main window of the subtitle cutter application."""
 
+from __future__ import annotations
+
 import json
 import shutil
 import subprocess
@@ -7,7 +9,7 @@ import tempfile
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QStandardPaths
-from PySide6.QtGui import QAction, QIcon
+from PySide6.QtGui import QAction, QCloseEvent, QIcon
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -16,6 +18,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QSplitter,
     QToolBar,
+    QWidget,
 )
 
 from subcutter.widgets.input_panel import InputPanel
@@ -26,6 +29,7 @@ from subcutter.actions.action_history import ActionHistory
 from subcutter.actions.ignore_fragment_action import IgnoreFragmentAction
 from subcutter.encoder import Encoder
 from subcutter.extensions import MEDIA_EXTENSIONS, SUBTITLE_EXTENSIONS, find_companion
+from subcutter.widgets.subtitle_fragment import SubtitleFragment
 
 
 class MainWindow(QMainWindow):
@@ -34,7 +38,7 @@ class MainWindow(QMainWindow):
     show_as_inline_changed = Signal(bool)
     edited = Signal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
         if MainWindow.singleton is not None:
@@ -91,11 +95,11 @@ class MainWindow(QMainWindow):
     #### Properties
 
     @property
-    def show_as_inline(self):
+    def show_as_inline(self) -> bool:
         return self._show_as_inline
 
     @show_as_inline.setter
-    def show_as_inline(self, value):
+    def show_as_inline(self, value: bool) -> None:
         if self._show_as_inline != value:
             self._show_as_inline = value
             self.setProperty("show_as_inline", value)
@@ -105,7 +109,7 @@ class MainWindow(QMainWindow):
 
     #### Saving/loading
 
-    def save_file(self):
+    def save_file(self) -> None:
         """Serialize current state to state.json."""
         data = {
             "input_panel": json.loads(self.input_panel.save()),
@@ -114,7 +118,7 @@ class MainWindow(QMainWindow):
         self._state_path.parent.mkdir(parents=True, exist_ok=True)
         self._state_path.write_text(json.dumps(data, indent=2))
 
-    def load_file(self):
+    def load_file(self) -> None:
         """Deserialize state from state.json and restore widgets."""
         if not self._state_path.exists():
             return
@@ -126,13 +130,13 @@ class MainWindow(QMainWindow):
         self.subtitle_display.load(json.dumps(data["subtitle_display"]))
         self._preprocess()
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: QCloseEvent) -> None:
         self.save_file()
         super().closeEvent(event)
 
     #### UI
 
-    def _build_actions(self):
+    def _build_actions(self) -> None:
         self.new_action = QAction(QIcon.fromTheme("document-new"), "&New", self)
         self.new_action.setShortcut("Ctrl+N")
         self.new_action.setToolTip("New project")
@@ -192,7 +196,7 @@ class MainWindow(QMainWindow):
         self.stop_action.setEnabled(False)
         self.stop_action.triggered.connect(self.encoder.stop)
 
-    def _build_menubar(self):
+    def _build_menubar(self) -> None:
         menubar = self.menuBar()
 
         file_menu = menubar.addMenu("&File")
@@ -206,7 +210,7 @@ class MainWindow(QMainWindow):
         edit_menu.addAction(self.undo_action)
         edit_menu.addAction(self.redo_action)
 
-    def _build_toolbar(self):
+    def _build_toolbar(self) -> None:
         toolbar = QToolBar("Main toolbar", self)
         toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         toolbar.setMovable(False)
@@ -228,7 +232,7 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.inline_action)
 
 
-    def _build_ui(self):
+    def _build_ui(self) -> None:
         # ── Left panel ────────────────────────────────────────────
         self.subtitle_display = SubtitleDisplay()
         self.subtitle_display.selected.connect(self._on_selected_fragment_changed)
@@ -275,14 +279,14 @@ class MainWindow(QMainWindow):
 
     #### Events
 
-    def _on_encoder_state_changed(self, running):
+    def _on_encoder_state_changed(self, running: bool) -> None:
         self.render_action.setEnabled(not running)
         self.stop_action.setEnabled(running)
         if not running and self.encoder.output_path:
             self.media_player.load_file(self.encoder.output_path)
             self.show_notify("Render Complete", f"Video rendered to {self.encoder.output_path}")
 
-    def _on_selected_fragment_changed(self, fragment):
+    def _on_selected_fragment_changed(self, fragment: SubtitleFragment | None) -> None:
         """Update Ignore Fragment action check state from the first selected fragment."""
         self.ignore_fragment_action.setChecked(
             fragment is not None and fragment.ignored
@@ -290,7 +294,7 @@ class MainWindow(QMainWindow):
 
     #### Notifications
 
-    def show_notify(self, title, text):
+    def show_notify(self, title: str, text: str) -> None:
         """Show a desktop notification (notify-send) or fall back to QMessageBox."""
         if shutil.which("notify-send"):
             subprocess.Popen(
@@ -301,20 +305,20 @@ class MainWindow(QMainWindow):
 
     #### Actions
 
-    def _toggle_ignore_selected(self):
+    def _toggle_ignore_selected(self) -> None:
         """Toggle the ignored state of the currently selected fragment(s)."""
         selected = [f for f in self.subtitle_display._fragments if f._selected]
         if not selected:
             return
         self._action_history.do(IgnoreFragmentAction(selected))
 
-    def _preprocess(self):
+    def _preprocess(self) -> None:
         self.encoder.preprocess(
             self.subtitle_display._fragments,
             self.input_panel.media_input.text(),
         )
 
-    def _render(self):
+    def _render(self) -> None:
         """Render the concatenated media file."""
         output_path = self.input_panel.output_input.text()
         if not output_path:
@@ -324,7 +328,7 @@ class MainWindow(QMainWindow):
         except RuntimeError as e:
             QMessageBox.critical(self, "Render Error", str(e))
 
-    def _open_file(self):
+    def _open_file(self) -> None:
         """Open a file dialog for media or subtitle files."""
         path, selected_filter = QFileDialog.getOpenFileName(
             self,
@@ -352,11 +356,11 @@ class MainWindow(QMainWindow):
                 if companion:
                     self.input_panel.subtitle_input.setText(companion)
 
-    def _load_media(self, path):
+    def _load_media(self, path: str) -> None:
         if path and Path(path).suffix.lower() in MEDIA_EXTENSIONS:
             self.media_player.load_file(path)
 
-    def _load_subtitles(self, path):
+    def _load_subtitles(self, path: str) -> None:
         if path and path.endswith(".srt"):
             self.subtitle_display.load_subtitles(path)
 

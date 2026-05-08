@@ -1,5 +1,7 @@
 """Rich-text subtitle display with highlightable fragments."""
 
+from __future__ import annotations
+
 import json
 
 from datetime import timedelta
@@ -16,7 +18,7 @@ class SubtitleDisplay(QScrollArea):
     """Scrollable container for subtitle fragments."""
     selected = Signal(object)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None):
         from subcutter.main_window import MainWindow
 
         super().__init__(parent)
@@ -35,7 +37,7 @@ class SubtitleDisplay(QScrollArea):
         MainWindow.singleton.show_as_inline_changed.connect(self._on_show_as_inline_changed)
         self._on_show_as_inline_changed()
 
-    def load_subtitles(self, path):
+    def load_subtitles(self, path: str) -> None:
         """Parse the srt file and load fragments."""
         with open(path, encoding="utf-8") as f:
             self._current_subtitles = list(srt.parse(f))
@@ -44,7 +46,7 @@ class SubtitleDisplay(QScrollArea):
 
     #### Fragments
 
-    def _refresh_fragments(self):
+    def _refresh_fragments(self) -> None:
         """Create fragment widgets from current subtitles."""
         for frag in self._fragments:
             try:
@@ -81,7 +83,7 @@ class SubtitleDisplay(QScrollArea):
             QWidget().setLayout(old_layout)
         self._container.setLayout(self._layout)
 
-    def _on_show_as_inline_changed(self, show_as_inline=False):
+    def _on_show_as_inline_changed(self, show_as_inline: bool = False) -> None:
         """Move fragments to a new layout without recreating them."""
         old_layout = self._layout
         if show_as_inline:
@@ -102,7 +104,7 @@ class SubtitleDisplay(QScrollArea):
             QWidget().setLayout(old_layout)
         self._container.setLayout(self._layout)
 
-    def _on_fragment_clicked(self, subtitle):
+    def _on_fragment_clicked(self, subtitle: srt.Subtitle) -> None:
         """Handle fragment click, supporting shift-click range selection."""
         idx = next(
             (i for i, s in enumerate(self._current_subtitles) if s is subtitle),
@@ -129,11 +131,11 @@ class SubtitleDisplay(QScrollArea):
     ### Playing fragment
 
     @property
-    def playing_fragment(self):
+    def playing_fragment(self) -> tuple[int, SubtitleFragment] | None:
         return self._playing_fragment
 
     @playing_fragment.setter
-    def playing_fragment(self, fragment):
+    def playing_fragment(self, fragment: tuple[int, SubtitleFragment] | None) -> None:
         old = self._playing_fragment
         if old is not None and fragment is not None and old[0] == fragment[0]:
             return
@@ -143,7 +145,7 @@ class SubtitleDisplay(QScrollArea):
         if fragment is not None:
             fragment[1].playing = True
 
-    def update_playing_position(self, position_ms):
+    def update_playing_position(self, position_ms: int) -> None:
         pos = timedelta(milliseconds=position_ms)
 
         # peek neighbours of current playing fragment first
@@ -174,7 +176,7 @@ class SubtitleDisplay(QScrollArea):
 
     #### Saving/loading
 
-    def save(self):
+    def save(self) -> str:
         """Serialize subtitle display state (subtitles + ignored states) to a JSON string."""
         return json.dumps({
             "subtitles": [
@@ -190,7 +192,7 @@ class SubtitleDisplay(QScrollArea):
             ]
         })
 
-    def load(self, json_str):
+    def load(self, json_str: str) -> None:
         """Restore subtitle display state (subtitles + ignored states) from a JSON string."""
         data = json.loads(json_str)
         subs = data.get("subtitles", [])

@@ -1,5 +1,7 @@
 """Container for input fields: video path and subtitle path."""
 
+from __future__ import annotations
+
 import json
 
 from PySide6.QtCore import Signal
@@ -20,7 +22,7 @@ class LineEditWithFile(QWidget):
 
     textChanged = Signal(str)
 
-    def __init__(self, placeholder="", parent=None):
+    def __init__(self, placeholder: str = "", parent: QWidget | None = None):
         super().__init__(parent)
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -38,15 +40,15 @@ class LineEditWithFile(QWidget):
         self.browse_button.clicked.connect(self._browse)
         self.line_edit.textChanged.connect(self.textChanged.emit)
 
-    def _browse(self):
+    def _browse(self) -> None:
         path, _ = QFileDialog.getOpenFileName(self, "Select file")
         if path:
             self.line_edit.setText(path)
 
-    def text(self):
+    def text(self) -> str:
         return self.line_edit.text()
 
-    def setText(self, text):
+    def setText(self, text: str) -> None:
         self.line_edit.setText(text)
 
 
@@ -55,7 +57,7 @@ class LineEditWithFile(QWidget):
 class InputPanel(QWidget):
     """Container for input fields: video path and subtitle path."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         layout = QVBoxLayout(self)
         layout.setSpacing(8)
@@ -77,7 +79,7 @@ class InputPanel(QWidget):
 
         layout.addStretch()
 
-    def save(self):
+    def save(self) -> str:
         """Serialize input panel state to a JSON string."""
         return json.dumps({
             "media_input": self.media_input.text(),
@@ -85,7 +87,7 @@ class InputPanel(QWidget):
             "output_input": self.output_input.text(),
         })
 
-    def load(self, json_str):
+    def load(self, json_str: str) -> None:
         """Restore input panel state from a JSON string."""
         data = json.loads(json_str)
         if "media_input" in data:

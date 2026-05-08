@@ -7,9 +7,9 @@ class Action(ABC):
     """An undoable operation on the project state."""
 
     @abstractmethod
-    def do(self):
+    def do(self) -> None:
         """Apply the action."""
 
     @abstractmethod
-    def undo(self):
+    def undo(self) -> None:
         """Reverse the action."""

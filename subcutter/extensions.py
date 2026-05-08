@@ -38,7 +38,7 @@ SUBTITLE_EXTENSIONS = (
     ".srt",
 )
 
-def find_companion(path, extensions):
+def find_companion(path: str, extensions: tuple[str, ...]) -> str | None:
     """Return the first existing file with the same stem but given extensions."""
     p = Path(path)
     for ext in extensions:

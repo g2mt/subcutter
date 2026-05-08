@@ -1,45 +1,47 @@
 """A flow layout that arranges child widgets in horizontal rows, wrapping naturally."""
 
+from __future__ import annotations
+
 from PySide6.QtCore import Qt, QPoint, QRect, QSize
-from PySide6.QtWidgets import QLayout
+from PySide6.QtWidgets import QLayout, QLayoutItem
 
 
 class FlowLayout(QLayout):
     """Layout that wraps items into multiple rows as space allows."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QLayout | None = None) -> None:
         super().__init__(parent)
-        self._items = []
+        self._items: list[QLayoutItem] = []
 
-    def addItem(self, item):
+    def addItem(self, item: QLayoutItem) -> None:
         self._items.append(item)
 
-    def count(self):
+    def count(self) -> int:
         return len(self._items)
 
-    def itemAt(self, index):
+    def itemAt(self, index: int) -> QLayoutItem | None:
         return self._items[index] if 0 <= index < len(self._items) else None
 
-    def takeAt(self, index):
+    def takeAt(self, index: int) -> QLayoutItem | None:
         return self._items.pop(index) if 0 <= index < len(self._items) else None
 
-    def expandingDirections(self):
+    def expandingDirections(self) -> Qt.Orientations:
         return Qt.Orientations(Qt.Orientation(0))
 
-    def hasHeightForWidth(self):
+    def hasHeightForWidth(self) -> bool:
         return True
 
-    def heightForWidth(self, width):
+    def heightForWidth(self, width: int) -> int:
         return self._do_layout(QRect(0, 0, width, 0), True)
 
-    def setGeometry(self, rect):
+    def setGeometry(self, rect: QRect) -> None:
         super().setGeometry(rect)
         self._do_layout(rect, False)
 
-    def sizeHint(self):
+    def sizeHint(self) -> QSize:
         return self.minimumSize()
 
-    def minimumSize(self):
+    def minimumSize(self) -> QSize:
         size = QSize()
         for item in self._items:
             size = size.expandedTo(item.minimumSize())
@@ -47,7 +49,7 @@ class FlowLayout(QLayout):
         size += QSize(2 * margins.left(), 2 * margins.top())
         return size
 
-    def _do_layout(self, rect, test_only):
+    def _do_layout(self, rect: QRect, test_only: bool) -> int:
         x = rect.x()
         y = rect.y()
         line_height = 0

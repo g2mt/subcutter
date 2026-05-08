@@ -1,14 +1,18 @@
 """Container for subtitle fragments."""
 
+from __future__ import annotations
+
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+import srt
 
 
 class SubtitleFragment(QFrame):
     """A single selectable subtitle entry."""
     clicked = Signal(object)
 
-    def __init__(self, subtitle, parent=None):
+    def __init__(self, subtitle: srt.Subtitle, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
         self.subtitle = subtitle
@@ -37,11 +41,11 @@ class SubtitleFragment(QFrame):
     #### Properties
 
     @property
-    def selected(self):
+    def selected(self) -> bool:
         return self._selected
 
     @selected.setter
-    def selected(self, selected):
+    def selected(self, selected: bool) -> None:
         """Set the selection state of this fragment."""
         if self._selected == selected:
             return
@@ -51,17 +55,17 @@ class SubtitleFragment(QFrame):
         self.style().polish(self)
 
     @property
-    def show_as_inline(self):
+    def show_as_inline(self) -> bool:
         return self._show_as_inline
 
     @show_as_inline.setter
-    def show_as_inline(self, show_as_inline):
+    def show_as_inline(self, show_as_inline: bool) -> None:
         if self._show_as_inline == show_as_inline:
             return
         self._show_as_inline = show_as_inline
         self._update_show_as_inline()
 
-    def _update_show_as_inline(self):
+    def _update_show_as_inline(self) -> None:
         if self._show_as_inline:
             self._layout.setContentsMargins(4, 2, 4, 2)
             self._info_label.hide()
@@ -72,11 +76,11 @@ class SubtitleFragment(QFrame):
         self.style().polish(self)
 
     @property
-    def playing(self):
+    def playing(self) -> bool:
         return self._playing
 
     @playing.setter
-    def playing(self, playing):
+    def playing(self, playing: bool) -> None:
         if self._playing == playing:
             return
         self._playing = playing
@@ -85,11 +89,11 @@ class SubtitleFragment(QFrame):
         self.style().polish(self)
 
     @property
-    def ignored(self):
+    def ignored(self) -> bool:
         return self._ignored
 
     @ignored.setter
-    def ignored(self, value):
+    def ignored(self, value: bool) -> None:
         if self._ignored == value:
             return
         self._ignored = value
@@ -103,6 +107,6 @@ class SubtitleFragment(QFrame):
 
     #### Events
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: QMouseEvent) -> None:
         self.clicked.emit(self.subtitle)
         super().mousePressEvent(event)
