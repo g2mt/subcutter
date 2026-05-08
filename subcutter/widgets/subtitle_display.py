@@ -1,6 +1,6 @@
 """Rich-text subtitle display with highlightable fragments."""
 
-from __future__ import annotations
+
 
 import json
 

@@ -1,6 +1,6 @@
 """Encodes subtitle timings into ffmpeg concat format."""
 
-from __future__ import annotations
+
 
 import os
 

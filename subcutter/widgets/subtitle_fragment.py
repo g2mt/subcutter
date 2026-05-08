@@ -1,6 +1,6 @@
 """Container for subtitle fragments."""
 
-from __future__ import annotations
+
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QMouseEvent

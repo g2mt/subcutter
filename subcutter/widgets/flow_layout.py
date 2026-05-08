@@ -1,6 +1,6 @@
 """A flow layout that arranges child widgets in horizontal rows, wrapping naturally."""
 
-from __future__ import annotations
+
 
 from PySide6.QtCore import Qt, QPoint, QRect, QSize
 from PySide6.QtWidgets import QLayout, QLayoutItem

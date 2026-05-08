@@ -1,6 +1,6 @@
 """Video playback widget using QMediaPlayer."""
 
-from __future__ import annotations
+
 
 from pathlib import Path
 

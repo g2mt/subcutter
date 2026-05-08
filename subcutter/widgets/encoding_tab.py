@@ -1,6 +1,6 @@
 """Tab container for encoding and timings information."""
 
-from __future__ import annotations
+
 
 from PySide6.QtWidgets import QPlainTextEdit, QTabWidget, QVBoxLayout, QWidget
 

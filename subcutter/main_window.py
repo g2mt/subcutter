@@ -1,6 +1,6 @@
 """Main window of the subtitle cutter application."""
 
-from __future__ import annotations
+
 
 import json
 import shutil

@@ -1,6 +1,6 @@
 """Container for input fields: video path and subtitle path."""
 
-from __future__ import annotations
+
 
 import json
 
