@@ -172,6 +172,7 @@ class MainWindow(QMainWindow):
         )
         self.ignore_fragment_action.setCheckable(True)
         self.ignore_fragment_action.setToolTip("Mark the selected fragment as ignored")
+        self.ignore_fragment_action.setShortcut("X")
         self.ignore_fragment_action.triggered.connect(self._toggle_ignore_selected)
 
         self.inline_action = QAction(
