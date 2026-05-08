@@ -2,7 +2,7 @@
 
 import json
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QApplication, QScrollArea, QVBoxLayout, QWidget
 import srt
 
@@ -12,6 +12,7 @@ from subcutter.widgets.subtitle_fragment import SubtitleFragment
 
 class SubtitleDisplay(QScrollArea):
     """Scrollable container for subtitle fragments."""
+    selected = Signal(object)
 
     def __init__(self, parent=None):
         from subcutter.main_window import MainWindow
@@ -113,11 +114,13 @@ class SubtitleDisplay(QScrollArea):
             end = max(self._anchor_index, idx)
             for i, frag in enumerate(self._fragments):
                 frag.selected = start <= i <= end
+            self.selected.emit(self._fragments[start])
         else:
             for frag in self._fragments:
                 frag.selected = False
             self._fragments[idx].selected = True
             self._anchor_index = idx
+            self.selected.emit(self._fragments[idx])
 
     #### Saving/loading
 

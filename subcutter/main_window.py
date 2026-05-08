@@ -162,6 +162,7 @@ class MainWindow(QMainWindow):
         self.ignore_fragment_action = QAction(
             QIcon.fromTheme("format-text-strikethrough"), "Ignore Fragment", self
         )
+        self.ignore_fragment_action.setCheckable(True)
         self.ignore_fragment_action.setToolTip("Mark the selected fragment as ignored")
         self.ignore_fragment_action.triggered.connect(self._toggle_ignore_selected)
 
@@ -218,6 +219,7 @@ class MainWindow(QMainWindow):
     def _build_ui(self):
         # ── Left panel ────────────────────────────────────────────
         self.subtitle_display = SubtitleDisplay()
+        self.subtitle_display.selected.connect(self._on_selected_fragment_changed)
 
         # ── Right panel ───────────────────────────────────────────
         self.media_player = MediaPlayer()
@@ -279,6 +281,12 @@ class MainWindow(QMainWindow):
         if not selected:
             return
         self._action_history.do(IgnoreFragmentAction(selected))
+
+    def _on_selected_fragment_changed(self, fragment):
+        """Update Ignore Fragment action check state from the first selected fragment."""
+        self.ignore_fragment_action.setChecked(
+            fragment is not None and fragment.ignored
+        )
 
     def _preprocess(self):
         self.encoder.preprocess(
