@@ -45,7 +45,7 @@ class MainWindow(QMainWindow):
         self._tmpdir = tempfile.mkdtemp(prefix="subcutter_")
         self.destroyed.connect(lambda: shutil.rmtree(self._tmpdir, ignore_errors=True))
         self.encoder = Encoder()
-        self.encoder.finished.connect(self._on_render_finished)
+        self.encoder.state_changed.connect(self._on_encoder_state_changed)
 
         self._action_history = ActionHistory(self)
 
@@ -181,6 +181,13 @@ class MainWindow(QMainWindow):
         self.render_action.setToolTip("Render the concatenated video")
         self.render_action.triggered.connect(self._render)
 
+        self.stop_action = QAction(
+            QIcon.fromTheme("media-playback-stop"), "Stop", self
+        )
+        self.stop_action.setToolTip("Stop rendering")
+        self.stop_action.setEnabled(False)
+        self.stop_action.triggered.connect(self.encoder.stop)
+
     def _build_menubar(self):
         menubar = self.menuBar()
 
@@ -209,6 +216,7 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.undo_action)
         toolbar.addAction(self.redo_action)
         toolbar.addAction(self.render_action)
+        toolbar.addAction(self.stop_action)
 
         toolbar.addSeparator()
 
@@ -261,9 +269,18 @@ class MainWindow(QMainWindow):
 
     #### Events
 
-    def _on_render_finished(self):
-        self.media_player.load_file(self.encoder.output_path)
-        self.show_notify("Render Complete", f"Video rendered to {self.encoder.output_path}")
+    def _on_encoder_state_changed(self, running):
+        self.render_action.setEnabled(not running)
+        self.stop_action.setEnabled(running)
+        if not running and self.encoder.output_path:
+            self.media_player.load_file(self.encoder.output_path)
+            self.show_notify("Render Complete", f"Video rendered to {self.encoder.output_path}")
+
+    def _on_selected_fragment_changed(self, fragment):
+        """Update Ignore Fragment action check state from the first selected fragment."""
+        self.ignore_fragment_action.setChecked(
+            fragment is not None and fragment.ignored
+        )
 
     #### Notifications
 
@@ -284,12 +301,6 @@ class MainWindow(QMainWindow):
         if not selected:
             return
         self._action_history.do(IgnoreFragmentAction(selected))
-
-    def _on_selected_fragment_changed(self, fragment):
-        """Update Ignore Fragment action check state from the first selected fragment."""
-        self.ignore_fragment_action.setChecked(
-            fragment is not None and fragment.ignored
-        )
 
     def _preprocess(self):
         self.encoder.preprocess(

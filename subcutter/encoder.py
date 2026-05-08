@@ -11,7 +11,7 @@ class Encoder(QObject):
     timings_updated = Signal(str)
     output_appended = Signal(str)
     output_reset = Signal()
-    finished = Signal()
+    state_changed = Signal(bool)
 
     def __init__(self):
         super().__init__()
@@ -69,6 +69,7 @@ class Encoder(QObject):
         self._output_path = output_path
         self._output = ""
         self.output_reset.emit()
+        self.state_changed.emit(True)
 
         from subcutter.main_window import MainWindow
         list_path = os.path.join(MainWindow.singleton._tmpdir, "concat_list.txt")
@@ -82,5 +83,12 @@ class Encoder(QObject):
         self._process = QProcess(self)
         self._process.setProcessChannelMode(QProcess.MergedChannels)
         self._process.readyReadStandardOutput.connect(self._on_output)
-        self._process.finished.connect(lambda *_: self.finished.emit())
+        self._process.finished.connect(lambda *_: self.state_changed.emit(False))
         self._process.start("ffmpeg", ["-f", "concat", "-safe", "0", "-i", list_path, output_path])
+
+    def stop(self):
+        """Stop the running encoder process."""
+        if self._process is not None and self._process.state() == QProcess.Running:
+            self._process.kill()
+            self._process.waitForFinished()
+            self.state_changed.emit(False)
