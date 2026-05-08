@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QSize, Qt, QUrl
 from PySide6.QtGui import QIcon
-from PySide6.QtMultimedia import QMediaPlayer
+from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PySide6.QtMultimediaWidgets import QVideoWidget
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -22,6 +22,7 @@ class MediaPlayer(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._player = QMediaPlayer(self)
+        self._player.setAudioOutput(QAudioOutput())
         self._video_widget = QVideoWidget(self)
         self._player.setVideoOutput(self._video_widget)
 
