@@ -7,7 +7,6 @@ from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 import srt
 
-
 class SubtitleFragment(QFrame):
     """A single selectable subtitle entry."""
     clicked = Signal(object)
@@ -114,4 +113,9 @@ class SubtitleFragment(QFrame):
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         self.clicked.emit(self.subtitle)
+        if event.modifiers() & Qt.ControlModifier:
+            from subcutter.main_window import MainWindow
+            media_player = MainWindow.singleton.media_player
+            ms = int(self.subtitle.start.total_seconds() * 1000)
+            media_player._player.setPosition(ms)
         super().mousePressEvent(event)
