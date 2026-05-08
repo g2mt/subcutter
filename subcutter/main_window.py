@@ -118,10 +118,9 @@ class MainWindow(QMainWindow):
             data = json.loads(self._state_path.read_text())
         except (json.JSONDecodeError, OSError):
             return
-        if "input_panel" in data:
-            self.input_panel.load(json.dumps(data["input_panel"]))
-        if "subtitle_display" in data:
-            self.subtitle_display.load(json.dumps(data["subtitle_display"]))
+        self.input_panel.load(json.dumps(data["input_panel"]))
+        self.subtitle_display.load(json.dumps(data["subtitle_display"]))
+        self._preprocess()
 
     def closeEvent(self, event):
         self.save_file()
@@ -229,12 +228,7 @@ class MainWindow(QMainWindow):
         self.input_panel.media_input.textChanged.connect(self._load_media)
 
         self.encoding_tab = EncodingTab()
-        self.edited.connect(
-            lambda: self.encoder.preprocess(
-                self.subtitle_display._fragments,
-                self.input_panel.media_input.text(),
-            )
-        )
+        self.edited.connect(self._preprocess)
         self.encoder.timings_updated.connect(
             self.encoding_tab.timings_text.setPlainText
         )
@@ -286,11 +280,17 @@ class MainWindow(QMainWindow):
             return
         self._action_history.do(IgnoreFragmentAction(selected))
 
+    def _preprocess(self):
+        self.encoder.preprocess(
+            self.subtitle_display._fragments,
+            self.input_panel.media_input.text(),
+        )
+
     def _render(self):
         """Render the concatenated media file."""
         output_path = self.input_panel.output_input.text()
         if not output_path:
-            output_path = Path(self._tmpdir, "render.mp4")
+            output_path = str(Path(self._tmpdir, "render.mp4"))
         try:
             self.encoder.render(output_path)
         except RuntimeError as e:

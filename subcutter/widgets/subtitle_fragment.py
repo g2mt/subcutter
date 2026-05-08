@@ -67,6 +67,8 @@ class SubtitleFragment(QFrame):
         else:
             self._layout.setContentsMargins(5, 5, 5, 5)
             self._info_label.show()
+        self.style().unpolish(self)
+        self.style().polish(self)
 
     @property
     def ignored(self):

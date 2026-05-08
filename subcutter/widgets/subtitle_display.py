@@ -53,7 +53,7 @@ class SubtitleDisplay(QScrollArea):
         self._anchor_index = None
 
         from subcutter.main_window import MainWindow
-        show_as_inline = MainWindow.singleton.show_as_inline()
+        show_as_inline = MainWindow.singleton.show_as_inline
 
         old_layout = self._layout
         if show_as_inline:
