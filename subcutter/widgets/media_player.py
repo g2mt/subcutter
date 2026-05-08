@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from PySide6.QtCore import QSize, Qt, QUrl
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QDragEnterEvent, QDropEvent, QIcon
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PySide6.QtMultimediaWidgets import QVideoWidget
 from PySide6.QtWidgets import (
@@ -15,12 +15,15 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from subcutter.extensions import MEDIA_EXTENSIONS
+
 
 class MediaPlayer(QWidget):
     """Video playback widget using QMediaPlayer."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setAcceptDrops(True)
         self._player = QMediaPlayer(self)
         self._audio_output = QAudioOutput()
         self._player.setAudioOutput(self._audio_output)
@@ -67,6 +70,23 @@ class MediaPlayer(QWidget):
         else:
             self._play_button.setIcon(QIcon.fromTheme("media-playback-start"))
             self._play_button.setToolTip("Play")
+
+    #### Drag & Drop
+
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        if event.mimeData().hasUrls():
+            urls = event.mimeData().urls()
+            if len(urls) == 1:
+                path = urls[0].toLocalFile()
+                if Path(path).suffix.lower() in MEDIA_EXTENSIONS:
+                    event.acceptProposedAction()
+                    return
+        event.ignore()
+
+    def dropEvent(self, event: QDropEvent):
+        path = event.mimeData().urls()[0].toLocalFile()
+        self.load_file(path)
+        event.acceptProposedAction()
 
     #### Actions
 
