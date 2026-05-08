@@ -234,8 +234,11 @@ class MainWindow(QMainWindow):
         self.encoder.timings_updated.connect(
             self.encoding_tab.timings_text.setPlainText
         )
-        self.encoder.output_changed.connect(
-            self.encoding_tab.output_text.setPlainText
+        self.encoder.output_appended.connect(
+            self.encoding_tab.output_text.appendPlainText
+        )
+        self.encoder.output_reset.connect(
+            self.encoding_tab.output_text.clear
         )
 
         right_splitter = QSplitter(Qt.Vertical)

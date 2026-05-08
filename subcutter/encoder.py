@@ -9,7 +9,8 @@ class Encoder(QObject):
     """Generates ffmpeg concat timings from unignored subtitle fragments."""
 
     timings_updated = Signal(str)
-    output_changed = Signal(str)
+    output_appended = Signal(str)
+    output_reset = Signal()
     finished = Signal()
 
     def __init__(self):
@@ -35,7 +36,7 @@ class Encoder(QObject):
     def _on_output(self):
         data = self._process.readAllStandardOutput().data().decode()
         self._output += data
-        self.output_changed.emit(self._output)
+        self.output_appended.emit(data)
 
     #### Actions
 
@@ -67,7 +68,7 @@ class Encoder(QObject):
 
         self._output_path = output_path
         self._output = ""
-        self.output_changed.emit(self._output)
+        self.output_reset.emit()
 
         from subcutter.main_window import MainWindow
         list_path = os.path.join(MainWindow.singleton._tmpdir, "concat_list.txt")
