@@ -40,10 +40,12 @@ class MediaPlayer(QWidget):
         self._seek_slider = QSlider(Qt.Horizontal)
         self._seek_slider.setRange(0, 0)
 
-        self._player.positionChanged.connect(self._seek_slider.setValue)
+        self._player.positionChanged.connect(self._update_slider)
         self._player.durationChanged.connect(self._on_duration_changed)
         self._player.playbackStateChanged.connect(self._on_state_changed)
-        self._seek_slider.sliderMoved.connect(self._player.setPosition)
+        self._seek_slider.sliderMoved.connect(self._seek)
+        self._seek_slider.sliderPressed.connect(self._prepare_seek)
+        self._seek_slider.sliderReleased.connect(self._end_seek)
 
         controls_layout = QHBoxLayout()
         controls_layout.setContentsMargins(0, 0, 0, 0)
@@ -94,8 +96,24 @@ class MediaPlayer(QWidget):
         """Load a media file for playback."""
         self._player.setSource(QUrl.fromLocalFile(str(path)))
 
+    def _update_slider(self, position):
+        if not self._seek_slider.isSliderDown():
+            self._seek_slider.setValue(position)
+
+    def _seek(self, position):
+        self._player.setPosition(position)
+
+    def _prepare_seek(self):
+        self._was_playing = self._player.playbackState() == QMediaPlayer.PlayingState
+        self._player.pause()
+
+    def _end_seek(self):
+        if self._was_playing:
+            self._player.play()
+
     def _toggle_play(self):
         if self._player.playbackState() == QMediaPlayer.PlayingState:
             self._player.pause()
         else:
             self._player.play()
+
