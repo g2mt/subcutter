@@ -12,10 +12,11 @@ class SubtitleFragment(QFrame):
     """A single selectable subtitle entry."""
     clicked = Signal(object)
 
-    def __init__(self, subtitle: srt.Subtitle, parent: QWidget | None = None) -> None:
+    def __init__(self, subtitle: srt.Subtitle, index: int, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
         self.subtitle = subtitle
+        self._index = index
         self._selected = False
         self._show_as_inline = False
         self._ignored = False
@@ -104,6 +105,10 @@ class SubtitleFragment(QFrame):
         self.setProperty("ignored", value)
         self.style().unpolish(self)
         self.style().polish(self)
+
+    @property
+    def index(self) -> int:
+        return self._index
 
     #### Events
 

@@ -22,10 +22,10 @@ class SubtitleDisplay(QScrollArea):
         from subcutter.main_window import MainWindow
 
         super().__init__(parent)
-        self._fragments = []
-        self._current_subtitles = []
-        self._anchor_index = None
-        self._playing_fragment = None
+        self._fragments: list[SubtitleFragment] = []
+        self._current_subtitles: list[srt.Subtitle] = []
+        self._anchor_index: int | None = None
+        self._playing_fragment: SubtitleFragment | None = None
 
         self.setWidgetResizable(True)
         self.setFrameShape(QScrollArea.NoFrame)
@@ -70,8 +70,8 @@ class SubtitleDisplay(QScrollArea):
             self._layout = QVBoxLayout()
             self._layout.setContentsMargins(0, 0, 0, 0)
             self._layout.setSpacing(0)
-        for sub in self._current_subtitles:
-            frag = SubtitleFragment(sub)
+        for idx, sub in enumerate(self._current_subtitles):
+            frag = SubtitleFragment(sub, idx)
             frag.show_as_inline = show_as_inline
             frag.clicked.connect(self._on_fragment_clicked)
             self._fragments.append(frag)
@@ -131,32 +131,32 @@ class SubtitleDisplay(QScrollArea):
     ### Playing fragment
 
     @property
-    def playing_fragment(self) -> tuple[int, SubtitleFragment] | None:
+    def playing_fragment(self) -> SubtitleFragment | None:
         return self._playing_fragment
 
     @playing_fragment.setter
-    def playing_fragment(self, fragment: tuple[int, SubtitleFragment] | None) -> None:
+    def playing_fragment(self, fragment: SubtitleFragment | None) -> None:
         old = self._playing_fragment
-        if old is not None and fragment is not None and old[0] == fragment[0]:
+        if old is not None and fragment is not None and old.index == fragment.index:
             return
         if old is not None:
-            old[1].playing = False
+            old.playing = False
         self._playing_fragment = fragment
         if fragment is not None:
-            fragment[1].playing = True
+            fragment.playing = True
 
     def update_playing_position(self, position_ms: int) -> None:
         pos = timedelta(milliseconds=position_ms)
 
         # peek neighbours of current playing fragment first
         if self._playing_fragment is not None:
-            i = self._playing_fragment[0]
+            i = self._playing_fragment.index
             for di in (0, -1, 1):
                 j = i + di
                 if 0 <= j < len(self._current_subtitles):
                     sub = self._current_subtitles[j]
                     if sub.start <= pos <= sub.end:
-                        self.playing_fragment = (j, self._fragments[j])
+                        self.playing_fragment = self._fragments[j]
                         return
 
         # binary search
@@ -169,7 +169,7 @@ class SubtitleDisplay(QScrollArea):
             elif pos > sub.end:
                 lo = mid + 1
             else:
-                self.playing_fragment = (mid, self._fragments[mid])
+                self.playing_fragment = self._fragments[mid]
                 return
 
         self.playing_fragment = None
