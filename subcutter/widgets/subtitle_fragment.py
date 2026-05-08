@@ -1,17 +1,20 @@
 """Container for subtitle fragments."""
 
-
-
+from typing import Optional
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 import srt
 
+
 class SubtitleFragment(QFrame):
     """A single selectable subtitle entry."""
+
     clicked = Signal(object)
 
-    def __init__(self, subtitle: srt.Subtitle, index: int, parent: QWidget | None = None) -> None:
+    def __init__(
+        self, subtitle: srt.Subtitle, index: int, parent: Optional[QWidget] = None
+    ) -> None:
         super().__init__(parent)
 
         self.subtitle = subtitle
@@ -32,7 +35,7 @@ class SubtitleFragment(QFrame):
         )
         self._layout.addWidget(self._info_label)
 
-        self._content_label = QLabel(subtitle.content.replace('\n', ' '))
+        self._content_label = QLabel(subtitle.content.replace("\n", " "))
         self._layout.addWidget(self._content_label)
         self._layout.addStretch()
 
@@ -115,6 +118,7 @@ class SubtitleFragment(QFrame):
         self.clicked.emit(self.subtitle)
         if event.modifiers() & Qt.ControlModifier:
             from subcutter.main_window import MainWindow
+
             media_player = MainWindow.singleton.media_player
             ms = int(self.subtitle.start.total_seconds() * 1000)
             media_player._player.setPosition(ms)

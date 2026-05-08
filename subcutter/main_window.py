@@ -1,7 +1,6 @@
 """Main window of the subtitle cutter application."""
 
-
-
+from typing import Optional
 import json
 import shutil
 import subprocess
@@ -34,11 +33,12 @@ from subcutter.widgets.subtitle_fragment import SubtitleFragment
 
 class MainWindow(QMainWindow):
     """Top-level window with a two-panel split layout."""
+
     singleton = None
     show_as_inline_changed = Signal(bool)
     edited = Signal()
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 
         if MainWindow.singleton is not None:
@@ -53,7 +53,9 @@ class MainWindow(QMainWindow):
 
         self._action_history = ActionHistory(self)
 
-        app_dir = Path(QStandardPaths.writableLocation(QStandardPaths.AppLocalDataLocation))
+        app_dir = Path(
+            QStandardPaths.writableLocation(QStandardPaths.AppLocalDataLocation)
+        )
         self._state_path = app_dir / "subcutter" / "state.json"
 
         self.setWindowTitle("Subtitle Cutter")
@@ -69,8 +71,7 @@ class MainWindow(QMainWindow):
         self._action_history.action_performed.connect(self.edited.emit)
 
         self.setProperty("show_as_inline", False)
-        self.setStyleSheet(
-        """
+        self.setStyleSheet("""
             MainWindow[show_as_inline=true] SubtitleFragment {
               background-color: #e8e8e8;
               border: 1px solid #bbb;
@@ -88,8 +89,7 @@ class MainWindow(QMainWindow):
             MainWindow[show_as_inline=true] SubtitleFragment[playing=true] {
               background-color: #fffacd !important;
             }
-        """
-        )
+        """)
         self.load_file()
 
     #### Properties
@@ -180,19 +180,17 @@ class MainWindow(QMainWindow):
         )
         self.inline_action.setCheckable(True)
         self.inline_action.setToolTip("Display subtitle fragments inline with wrapping")
+
         def on_inline_action_toggled(toggled):
             self.show_as_inline = toggled
+
         self.inline_action.toggled.connect(on_inline_action_toggled)
 
-        self.render_action = QAction(
-            QIcon.fromTheme("media-record"), "Render", self
-        )
+        self.render_action = QAction(QIcon.fromTheme("media-record"), "Render", self)
         self.render_action.setToolTip("Render the concatenated video")
         self.render_action.triggered.connect(self._render)
 
-        self.stop_action = QAction(
-            QIcon.fromTheme("media-playback-stop"), "Stop", self
-        )
+        self.stop_action = QAction(QIcon.fromTheme("media-playback-stop"), "Stop", self)
         self.stop_action.setToolTip("Stop rendering")
         self.stop_action.setEnabled(False)
         self.stop_action.triggered.connect(self.encoder.stop)
@@ -232,7 +230,6 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.ignore_fragment_action)
         toolbar.addAction(self.inline_action)
 
-
     def _build_ui(self) -> None:
         # ── Left panel ────────────────────────────────────────────
         self.subtitle_display = SubtitleDisplay()
@@ -240,7 +237,9 @@ class MainWindow(QMainWindow):
 
         # ── Right panel ───────────────────────────────────────────
         self.media_player = MediaPlayer()
-        self.media_player._player.positionChanged.connect(self.subtitle_display.update_playing_position)
+        self.media_player._player.positionChanged.connect(
+            self.subtitle_display.update_playing_position
+        )
 
         self.input_panel = InputPanel()
 
@@ -255,9 +254,7 @@ class MainWindow(QMainWindow):
         self.encoder.output_appended.connect(
             self.encoding_tab.output_text.appendPlainText
         )
-        self.encoder.output_reset.connect(
-            self.encoding_tab.output_text.clear
-        )
+        self.encoder.output_reset.connect(self.encoding_tab.output_text.clear)
 
         right_splitter = QSplitter(Qt.Vertical)
         right_splitter.addWidget(self.media_player)
@@ -283,9 +280,13 @@ class MainWindow(QMainWindow):
         self.render_action.setEnabled(not running)
         self.stop_action.setEnabled(running)
         if not running and self.encoder.output_path:
-            self.show_notify("Render Complete", f"Video rendered to {self.encoder.output_path}")
+            self.show_notify(
+                "Render Complete", f"Video rendered to {self.encoder.output_path}"
+            )
 
-    def _on_selected_fragment_changed(self, fragment: SubtitleFragment | None) -> None:
+    def _on_selected_fragment_changed(
+        self, fragment: Optional[SubtitleFragment]
+    ) -> None:
         """Update Ignore Fragment action check state from the first selected fragment."""
         self.ignore_fragment_action.setChecked(
             fragment is not None and fragment.ignored
@@ -296,9 +297,7 @@ class MainWindow(QMainWindow):
     def show_notify(self, title: str, text: str) -> None:
         """Show a desktop notification (notify-send) or fall back to QMessageBox."""
         if shutil.which("notify-send"):
-            subprocess.Popen(
-                ["notify-send", title, text]
-            )
+            subprocess.Popen(["notify-send", title, text])
         else:
             QMessageBox.information(self, title, text)
 
@@ -341,17 +340,13 @@ class MainWindow(QMainWindow):
         if path.lower().endswith(SUBTITLE_EXTENSIONS):
             self.input_panel.subtitle_input.setText(path)
             if not self.input_panel.media_input.text():
-                companion = find_companion(
-                    path, MEDIA_EXTENSIONS
-                )
+                companion = find_companion(path, MEDIA_EXTENSIONS)
                 if companion:
                     self.input_panel.media_input.setText(companion)
         else:
             self.input_panel.media_input.setText(path)
             if not self.input_panel.subtitle_input.text():
-                companion = find_companion(
-                    path, SUBTITLE_EXTENSIONS
-                )
+                companion = find_companion(path, SUBTITLE_EXTENSIONS)
                 if companion:
                     self.input_panel.subtitle_input.setText(companion)
 
@@ -362,4 +357,3 @@ class MainWindow(QMainWindow):
     def _load_subtitles(self, path: str) -> None:
         if path and path.endswith(".srt"):
             self.subtitle_display.load_subtitles(path)
-

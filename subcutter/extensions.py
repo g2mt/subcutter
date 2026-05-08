@@ -1,5 +1,6 @@
 """File extension constants for media and subtitle files."""
 
+from typing import Optional
 from pathlib import Path
 
 MEDIA_EXTENSIONS = (
@@ -34,11 +35,10 @@ MEDIA_EXTENSIONS = (
     ".wmv",
 )
 
-SUBTITLE_EXTENSIONS = (
-    ".srt",
-)
+SUBTITLE_EXTENSIONS = (".srt",)
 
-def find_companion(path: str, extensions: tuple[str, ...]) -> str | None:
+
+def find_companion(path: str, extensions: tuple[str, ...]) -> Optional[str]:
     """Return the first existing file with the same stem but given extensions."""
     p = Path(path)
     for ext in extensions:

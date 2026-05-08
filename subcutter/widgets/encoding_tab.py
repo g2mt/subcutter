@@ -1,14 +1,13 @@
 """Tab container for encoding and timings information."""
 
-
-
 from PySide6.QtWidgets import QPlainTextEdit, QTabWidget, QVBoxLayout, QWidget
+from typing import Optional
 
 
 class EncodingTab(QTabWidget):
     """Tab container for encoding info, currently with a Timings tab."""
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 
         # ── Timings tab ───────────────────────────────────────

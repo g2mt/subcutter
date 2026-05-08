@@ -1,6 +1,6 @@
 """Video playback widget using QMediaPlayer."""
 
-
+from typing import Optional
 
 from pathlib import Path
 
@@ -23,7 +23,7 @@ from subcutter.extensions import MEDIA_EXTENSIONS
 class MediaPlayer(QWidget):
     """Video playback widget using QMediaPlayer."""
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self.setAcceptDrops(True)
         self._player = QMediaPlayer(self)
@@ -118,4 +118,3 @@ class MediaPlayer(QWidget):
             self._player.pause()
         else:
             self._player.play()
-

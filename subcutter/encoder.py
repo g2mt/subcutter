@@ -1,7 +1,5 @@
 """Encodes subtitle timings into ffmpeg concat format."""
 
-
-
 import os
 
 from PySide6.QtCore import QObject, QProcess, Signal
@@ -76,6 +74,7 @@ class Encoder(QObject):
         self.state_changed.emit(True)
 
         from subcutter.main_window import MainWindow
+
         list_path = os.path.join(MainWindow.singleton._tmpdir, "concat_list.txt")
         with open(list_path, "w") as f:
             f.write(self._timings)
@@ -88,7 +87,9 @@ class Encoder(QObject):
         self._process.setProcessChannelMode(QProcess.MergedChannels)
         self._process.readyReadStandardOutput.connect(self._on_output)
         self._process.finished.connect(lambda *_: self.state_changed.emit(False))
-        self._process.start("ffmpeg", ["-f", "concat", "-safe", "0", "-i", list_path, output_path])
+        self._process.start(
+            "ffmpeg", ["-f", "concat", "-safe", "0", "-i", list_path, output_path]
+        )
 
     def stop(self) -> None:
         """Stop the running encoder process."""

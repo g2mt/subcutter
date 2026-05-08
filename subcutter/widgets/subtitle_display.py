@@ -1,7 +1,6 @@
 """Rich-text subtitle display with highlightable fragments."""
 
-
-
+from typing import Optional
 import json
 
 from datetime import timedelta
@@ -16,16 +15,17 @@ from subcutter.widgets.subtitle_fragment import SubtitleFragment
 
 class SubtitleDisplay(QScrollArea):
     """Scrollable container for subtitle fragments."""
+
     selected = Signal(object)
 
-    def __init__(self, parent: QWidget | None = None):
+    def __init__(self, parent: Optional[QWidget] = None):
         from subcutter.main_window import MainWindow
 
         super().__init__(parent)
         self._fragments: list[SubtitleFragment] = []
         self._current_subtitles: list[srt.Subtitle] = []
-        self._anchor_index: int | None = None
-        self._playing_fragment: SubtitleFragment | None = None
+        self._anchor_index: Optional[int] = None
+        self._playing_fragment: Optional[SubtitleFragment] = None
 
         self.setWidgetResizable(True)
         self.setFrameShape(QScrollArea.NoFrame)
@@ -34,7 +34,9 @@ class SubtitleDisplay(QScrollArea):
         self._layout = None
         self.setWidget(self._container)
 
-        MainWindow.singleton.show_as_inline_changed.connect(self._on_show_as_inline_changed)
+        MainWindow.singleton.show_as_inline_changed.connect(
+            self._on_show_as_inline_changed
+        )
         self._on_show_as_inline_changed()
 
     def load_subtitles(self, path: str) -> None:
@@ -60,6 +62,7 @@ class SubtitleDisplay(QScrollArea):
         self._playing_fragment = None
 
         from subcutter.main_window import MainWindow
+
         show_as_inline = MainWindow.singleton.show_as_inline
 
         old_layout = self._layout
@@ -131,11 +134,11 @@ class SubtitleDisplay(QScrollArea):
     ### Playing fragment
 
     @property
-    def playing_fragment(self) -> SubtitleFragment | None:
+    def playing_fragment(self) -> Optional[SubtitleFragment]:
         return self._playing_fragment
 
     @playing_fragment.setter
-    def playing_fragment(self, fragment: SubtitleFragment | None) -> None:
+    def playing_fragment(self, fragment: Optional[SubtitleFragment]) -> None:
         old = self._playing_fragment
         if old is not None and fragment is not None and old.index == fragment.index:
             return
@@ -178,19 +181,25 @@ class SubtitleDisplay(QScrollArea):
 
     def save(self) -> str:
         """Serialize subtitle display state (subtitles + ignored states) to a JSON string."""
-        return json.dumps({
-            "subtitles": [
-                {
-                    "index": sub.index,
-                    "start": srt.timedelta_to_srt_timestamp(sub.start),
-                    "end": srt.timedelta_to_srt_timestamp(sub.end),
-                    "content": sub.content,
-                    "proprietary": sub.proprietary,
-                    "ignored": self._fragments[i].ignored if i < len(self._fragments) else False,
-                }
-                for i, sub in enumerate(self._current_subtitles)
-            ]
-        })
+        return json.dumps(
+            {
+                "subtitles": [
+                    {
+                        "index": sub.index,
+                        "start": srt.timedelta_to_srt_timestamp(sub.start),
+                        "end": srt.timedelta_to_srt_timestamp(sub.end),
+                        "content": sub.content,
+                        "proprietary": sub.proprietary,
+                        "ignored": (
+                            self._fragments[i].ignored
+                            if i < len(self._fragments)
+                            else False
+                        ),
+                    }
+                    for i, sub in enumerate(self._current_subtitles)
+                ]
+            }
+        )
 
     def load(self, json_str: str) -> None:
         """Restore subtitle display state (subtitles + ignored states) from a JSON string."""
@@ -210,4 +219,3 @@ class SubtitleDisplay(QScrollArea):
         for i, s in enumerate(subs):
             if i < len(self._fragments) and s.get("ignored", False):
                 self._fragments[i].ignored = True
-

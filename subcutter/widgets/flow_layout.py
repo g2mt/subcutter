@@ -1,7 +1,6 @@
 """A flow layout that arranges child widgets in horizontal rows, wrapping naturally."""
 
-
-
+from typing import Optional
 from PySide6.QtCore import Qt, QPoint, QRect, QSize
 from PySide6.QtWidgets import QLayout, QLayoutItem
 
@@ -9,7 +8,7 @@ from PySide6.QtWidgets import QLayout, QLayoutItem
 class FlowLayout(QLayout):
     """Layout that wraps items into multiple rows as space allows."""
 
-    def __init__(self, parent: QLayout | None = None) -> None:
+    def __init__(self, parent: Optional[QLayout] = None) -> None:
         super().__init__(parent)
         self._items: list[QLayoutItem] = []
 
@@ -19,10 +18,10 @@ class FlowLayout(QLayout):
     def count(self) -> int:
         return len(self._items)
 
-    def itemAt(self, index: int) -> QLayoutItem | None:
+    def itemAt(self, index: int) -> Optional[QLayoutItem]:
         return self._items[index] if 0 <= index < len(self._items) else None
 
-    def takeAt(self, index: int) -> QLayoutItem | None:
+    def takeAt(self, index: int) -> Optional[QLayoutItem]:
         return self._items.pop(index) if 0 <= index < len(self._items) else None
 
     def expandingDirections(self) -> Qt.Orientations:

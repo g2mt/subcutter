@@ -2,10 +2,7 @@
 
 from PySide6.QtCore import QObject, Signal
 
-
-
-
-from PySide6.QtCore import QObject, Signal
+from typing import Optional
 
 from subcutter.actions.action import Action
 
@@ -17,7 +14,7 @@ class ActionHistory(QObject):
     can_redo_changed = Signal(bool)
     action_performed = Signal()
 
-    def __init__(self, parent: QObject | None = None) -> None:
+    def __init__(self, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
         self._undo_stack: list[Action] = []
         self._redo_stack: list[Action] = []

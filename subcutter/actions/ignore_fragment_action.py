@@ -1,7 +1,5 @@
 """Action for toggling the ignored state of subtitle fragments."""
 
-
-
 from subcutter.actions.action import Action
 from subcutter.widgets.subtitle_fragment import SubtitleFragment
 
