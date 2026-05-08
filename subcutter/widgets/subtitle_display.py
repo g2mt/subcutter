@@ -2,6 +2,8 @@
 
 import json
 
+from datetime import timedelta
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QApplication, QScrollArea, QVBoxLayout, QWidget
 import srt
@@ -21,6 +23,7 @@ class SubtitleDisplay(QScrollArea):
         self._fragments = []
         self._current_subtitles = []
         self._anchor_index = None
+        self._playing_fragment = None
 
         self.setWidgetResizable(True)
         self.setFrameShape(QScrollArea.NoFrame)
@@ -52,6 +55,7 @@ class SubtitleDisplay(QScrollArea):
 
         self._fragments.clear()
         self._anchor_index = None
+        self._playing_fragment = None
 
         from subcutter.main_window import MainWindow
         show_as_inline = MainWindow.singleton.show_as_inline
@@ -121,6 +125,52 @@ class SubtitleDisplay(QScrollArea):
             self._fragments[idx].selected = True
             self._anchor_index = idx
             self.selected.emit(self._fragments[idx])
+
+    ### Playing fragment
+
+    @property
+    def playing_fragment(self):
+        return self._playing_fragment
+
+    @playing_fragment.setter
+    def playing_fragment(self, fragment):
+        old = self._playing_fragment
+        if old is not None and fragment is not None and old[0] == fragment[0]:
+            return
+        if old is not None:
+            old[1].playing = False
+        self._playing_fragment = fragment
+        if fragment is not None:
+            fragment[1].playing = True
+
+    def update_playing_position(self, position_ms):
+        pos = timedelta(milliseconds=position_ms)
+
+        # peek neighbours of current playing fragment first
+        if self._playing_fragment is not None:
+            i = self._playing_fragment[0]
+            for di in (0, -1, 1):
+                j = i + di
+                if 0 <= j < len(self._current_subtitles):
+                    sub = self._current_subtitles[j]
+                    if sub.start <= pos <= sub.end:
+                        self.playing_fragment = (j, self._fragments[j])
+                        return
+
+        # binary search
+        lo, hi = 0, len(self._current_subtitles) - 1
+        while lo <= hi:
+            mid = (lo + hi) // 2
+            sub = self._current_subtitles[mid]
+            if pos < sub.start:
+                hi = mid - 1
+            elif pos > sub.end:
+                lo = mid + 1
+            else:
+                self.playing_fragment = (mid, self._fragments[mid])
+                return
+
+        self.playing_fragment = None
 
     #### Saving/loading
 

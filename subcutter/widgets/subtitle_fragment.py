@@ -15,6 +15,7 @@ class SubtitleFragment(QFrame):
         self._selected = False
         self._show_as_inline = False
         self._ignored = False
+        self._playing = False
 
         self.setFrameShape(QFrame.StyledPanel)
         self.setCursor(Qt.PointingHandCursor)
@@ -67,6 +68,19 @@ class SubtitleFragment(QFrame):
         else:
             self._layout.setContentsMargins(5, 5, 5, 5)
             self._info_label.show()
+        self.style().unpolish(self)
+        self.style().polish(self)
+
+    @property
+    def playing(self):
+        return self._playing
+
+    @playing.setter
+    def playing(self, playing):
+        if self._playing == playing:
+            return
+        self._playing = playing
+        self.setProperty("playing", playing)
         self.style().unpolish(self)
         self.style().polish(self)
 

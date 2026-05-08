@@ -78,7 +78,11 @@ class MainWindow(QMainWindow):
             }
             SubtitleFragment[selected=true],
             MainWindow[show_as_inline=true] SubtitleFragment[selected=true] {
-              background-color: #add8e6 !important;
+              background-color: #add8e6;
+            }
+            SubtitleFragment[playing=true],
+            MainWindow[show_as_inline=true] SubtitleFragment[playing=true] {
+              background-color: #fffacd !important;
             }
         """
         )
@@ -231,6 +235,8 @@ class MainWindow(QMainWindow):
 
         # ── Right panel ───────────────────────────────────────────
         self.media_player = MediaPlayer()
+
+        self.media_player._player.positionChanged.connect(self.subtitle_display.set_playing_position)
 
         self.input_panel = InputPanel()
 
